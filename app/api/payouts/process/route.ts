@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/db/connect"
 import { getModels } from "@/lib/db/models"
+import { createPaymanService } from "@/lib/payment/payman"
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,9 +19,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (payout.status !== "pending") {
-      return NextResponse.json(
-        { error: `Payout is already ${payout.status}` },\
-        { status  {
       return NextResponse.json(
         { error: `Payout is already ${payout.status}` },
         { status: 400 }
@@ -40,22 +38,22 @@ export async function POST(request: NextRequest) {
     await payout.save()
 
     try {
-      // Process payment based on payment method
-      let paymentResult
+      const paymanService = createPaymanService(paymanApiKey)
 
       if (payout.paymentMethod === "ACH") {
         // Call Payman API for ACH payment
-        paymentResult = await processAchPayment(paymanApiKey, payout.affiliateId, payout.amount)
+        const paymentResult = await paymanService.createACHPayment(payout.affiliateId, payout.amount)
+        payout.paymentDetails = {
+          transactionId: paymentResult.transactionId
+        }
       } else if (payout.paymentMethod === "USDC") {
         // Call Payman API for USDC payment
-        paymentResult = await processUsdcPayment(paymanApiKey, payout.affiliateId, payout.amount)
+        const paymentResult = await paymanService.createUSDCPayment(payout.affiliateId, payout.amount)
+        payout.paymentDetails = {
+          txHash: paymentResult.txHash
+        }
       }
 
-      // Update payout with transaction details
-      payout.paymentDetails = {
-        transactionId: paymentResult.transactionId,
-        txHash: paymentResult.txHash,
-      }
       payout.status = "completed"
       payout.processedAt = new Date()
       await payout.save()
@@ -64,45 +62,22 @@ export async function POST(request: NextRequest) {
         message: "Payout processed successfully",
         payout,
       })
-    } catch (error) {
+    } catch (error: unknown) {
       // Mark payout as failed
       payout.status = "failed"
       await payout.save()
 
       console.error("Payment processing error:", error)
-      return NextResponse.json({ error: "Payment processing failed", details: error.message }, { status: 500 })
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      return NextResponse.json({ 
+        error: "Payment processing failed", 
+        details: errorMessage 
+      }, { status: 500 })
     }
-  } catch (error) 
+  } catch (error: unknown) {
     console.error("Error processing payout:", error)
-    return NextResponse.json({ error: "Failed to process payout" }, { status: 500 })
-}
-
-// Mock functions for payment processing
-async function processAchPayment(apiKey: string, affiliate: any, amount: number) {
-  // In a real implementation, this would call the Payman API
-  console.log(`Processing ACH payment of $${amount} to ${affiliate.name}`)
-
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  // Return mock transaction details
-  return {
-    transactionId: `ach_${Date.now()}`,
-    status: "completed",
-  }
-}
-
-async function processUsdcPayment(apiKey: string, affiliate: any, amount: number) {
-  // In a real implementation, this would call the Payman API
-  console.log(`Processing USDC payment of $${amount} to ${affiliate.name}`)
-
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  // Return mock transaction details
-  return {
-    txHash: `0x${Math.random().toString(16).substring(2, 42)}`,
-    status: "completed",
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ error: `Failed to process payout: ${errorMessage}` }, { status: 500 })
   }
 }
 

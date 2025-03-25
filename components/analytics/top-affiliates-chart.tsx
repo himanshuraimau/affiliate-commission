@@ -17,6 +17,20 @@ import { useTopAffiliates } from "@/lib/api/hooks"
 export function TopAffiliatesChart() {
   const { data, isLoading, error } = useTopAffiliates()
   
+  // Log data for debugging
+  console.log("Top affiliates data:", data)
+  
+  // Prepare data for chart - ensure proper structure
+  const chartData = data && data.length > 0 ? 
+    data.map((item: { name: any; revenue: any }) => ({
+      name: item.name || "Unknown",
+      revenue: typeof item.revenue === 'number' ? item.revenue : 0
+    }))
+    : [];
+  
+  // Check if we have valid data to display
+  const hasValidData = chartData && chartData.length > 0;
+  
   if (isLoading) {
     return (
       <Card>
@@ -45,6 +59,20 @@ export function TopAffiliatesChart() {
     )
   }
 
+  if (!hasValidData) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Affiliates</CardTitle>
+          <CardDescription>No affiliate data available for the selected period</CardDescription>
+        </CardHeader>
+        <CardContent className="flex h-80 items-center justify-center">
+          <p className="text-muted-foreground">No data to display</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -56,12 +84,12 @@ export function TopAffiliatesChart() {
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart
-            data={data}
+            data={chartData}
             layout="vertical"
             margin={{
               top: 5,
               right: 30,
-              left: 60, // Increased left margin for longer affiliate names
+              left: 60,
               bottom: 5,
             }}
           >

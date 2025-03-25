@@ -201,19 +201,16 @@ export const conversionsApi = {
 
 // Payouts API
 export const payoutsApi = {
-  getAll: async (params?: { status?: string, dateFrom?: string, dateTo?: string }): Promise<Payout[]> => {
+  getAll: async (params?: { status?: string, dateFrom?: string, dateTo?: string, paymentMethod?: string }): Promise<Payout[]> => {
     const url = new URL(PAYOUTS_PATH, window.location.origin);
     
-    if (params?.status) {
-      url.searchParams.append('status', params.status);
-    }
-    
-    if (params?.dateFrom) {
-      url.searchParams.append('dateFrom', params.dateFrom);
-    }
-    
-    if (params?.dateTo) {
-      url.searchParams.append('dateTo', params.dateTo);
+    // Add all params to URL
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          url.searchParams.append(key, value);
+        }
+      });
     }
     
     const response = await fetch(url);

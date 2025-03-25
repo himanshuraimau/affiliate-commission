@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,13 +16,18 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
-import { MoreHorizontal, Play, Eye, AlertCircle } from "lucide-react"
-import { usePayouts, useAffiliates, useProcessPayout } from "@/lib/api/hooks"
-import { usePayoutsFilter } from "./payouts-filter-context"
+import { Check, X, MoreHorizontal } from "lucide-react"
+import { useConversions, useAffiliates, useUpdateConversionStatus } from "@/lib/api/hooks"
+import { useConversionsFilter } from "./conversions-filter-context"
 
-export function PayoutsList() {
+export function ConversionsList() {
   const { toast } = useToast()
-  const { dateRange, statusFilter, paymentMethodFilter, searchTerm } = usePayoutsFilter()
+  const { 
+    dateRange, 
+    statusFilter, 
+    affiliateFilter, 
+    searchTerm 
+  } = useConversionsFilter()
   
   // Format date for API
   const formatDateParam = (date: Date | undefined) => {
@@ -33,35 +39,34 @@ export function PayoutsList() {
   const apiFilters = {
     status: statusFilter !== "all" ? statusFilter : undefined,
     dateFrom: formatDateParam(dateRange.from),
-    dateTo: formatDateParam(dateRange.to)
+    dateTo: formatDateParam(dateRange.to),
+    affiliateId: affiliateFilter !== "all" ? affiliateFilter : undefined
   }
   
-  // Get payouts and affiliates with filters
-  const { data: payouts = [], isLoading: isLoadingPayouts } = usePayouts(apiFilters)
+  // Get conversions with filters
+  const { data: conversions = [], isLoading: isLoadingConversions } = useConversions(apiFilters)
   const { data: affiliates = [], isLoading: isLoadingAffiliates } = useAffiliates()
   
-  // Get mutation function for processing payouts
-  const processPayout = useProcessPayout()
+  const updateConversionStatus = useUpdateConversionStatus()
 
-  // Combine payouts data with affiliate info and apply client-side filters
-  const enrichedPayouts = payouts
-    .map(payout => {
-      const affiliate = affiliates.find(a => a._id === payout.affiliateId)
+  // Combine conversions data with affiliate info and apply client-side filters
+  const enrichedConversions = conversions
+    .map(conversion => {
+      const affiliate = affiliates.find(a => a._id === conversion.affiliateId)
       return {
-        ...payout,
+        ...conversion,
         affiliateName: affiliate?.name || 'Unknown',
         affiliateEmail: affiliate?.email || 'Unknown'
       }
     })
-    // Apply payment method filter client-side if needed
-    .filter(payout => paymentMethodFilter === "all" || payout.paymentMethod === paymentMethodFilter)
     // Apply search filter
-    .filter(payout => {
+    .filter(conversion => {
       if (!searchTerm) return true
       const searchLower = searchTerm.toLowerCase()
       return (
-        payout.affiliateName.toLowerCase().includes(searchLower) ||
-        payout.affiliateEmail.toLowerCase().includes(searchLower)
+        conversion.orderId.toLowerCase().includes(searchLower) ||
+        conversion.customer.email.toLowerCase().includes(searchLower) ||
+        (conversion.customer.name && conversion.customer.name.toLowerCase().includes(searchLower))
       )
     })
     // Sort by creation date descending
@@ -69,37 +74,37 @@ export function PayoutsList() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed":
+      case "approved":
         return "bg-green-500/10 text-green-500 hover:bg-green-500/20"
       case "pending":
         return "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20"
-      case "processing":
-        return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20"
-      case "failed":
+      case "rejected":
         return "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+      case "paid":
+        return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20"
       default:
         return "bg-gray-500/10 text-gray-500 hover:bg-gray-500/20"
     }
   }
 
-  const handleProcessPayout = async (id: string) => {
+  const handleStatusUpdate = async (id: string, status: "approved" | "rejected") => {
     try {
-      await processPayout.mutateAsync(id)
+      await updateConversionStatus.mutateAsync({ id, status })
       toast({
         title: "Success",
-        description: "Payout processed successfully",
+        description: `Conversion ${status}`,
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
       toast({
         title: "Error",
-        description: `Failed to process payout: ${errorMessage}`,
+        description: `Failed to update conversion: ${errorMessage}`,
         variant: "destructive",
       })
     }
   }
 
-  const isLoading = isLoadingPayouts || isLoadingAffiliates
+  const isLoading = isLoadingConversions || isLoadingAffiliates
 
   if (isLoading) {
     return (
@@ -118,43 +123,43 @@ export function PayoutsList() {
   return (
     <Card>
       <CardContent className="p-6">
-        {enrichedPayouts.length === 0 ? (
+        {enrichedConversions.length === 0 ? (
           <div className="text-center p-4">
-            <h3 className="text-lg font-medium">No payouts found</h3>
+            <h3 className="text-lg font-medium">No conversions found</h3>
             <p className="text-sm text-muted-foreground">
-              {payouts.length > 0 ? 
-                "No payouts match the current filters" : 
-                "Payouts will appear here once they're created"}
+              {conversions.length > 0 ? 
+                "No conversions match the current filters" : 
+                "Conversions will appear here once they're created"}
             </p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Order ID</TableHead>
                 <TableHead>Affiliate</TableHead>
+                <TableHead>Customer</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Payment Method</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Processed</TableHead>
+                <TableHead>Commission</TableHead>
+                <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {enrichedPayouts.map((payout) => (
-                <TableRow key={payout._id}>
+              {enrichedConversions.map((conversion) => (
+                <TableRow key={conversion._id}>
+                  <TableCell className="font-medium">{conversion.orderId}</TableCell>
+                  <TableCell>{conversion.affiliateName}</TableCell>
                   <TableCell>
-                    <div className="font-medium">{payout.affiliateName}</div>
-                    <div className="text-sm text-muted-foreground">{payout.affiliateEmail}</div>
+                    <div>{conversion.customer.name || "N/A"}</div>
+                    <div className="text-sm text-muted-foreground">{conversion.customer.email}</div>
                   </TableCell>
-                  <TableCell className="font-medium">{formatCurrency(payout.amount)}</TableCell>
-                  <TableCell>{payout.paymentMethod}</TableCell>
-                  <TableCell>{formatDate(new Date(payout.createdAt))}</TableCell>
+                  <TableCell>{formatCurrency(conversion.orderAmount)}</TableCell>
+                  <TableCell>{formatCurrency(conversion.commissionAmount)}</TableCell>
+                  <TableCell>{formatDate(new Date(conversion.createdAt))}</TableCell>
                   <TableCell>
-                    {payout.processedAt ? formatDate(new Date(payout.processedAt)) : "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(payout.status)}>{payout.status}</Badge>
+                    <Badge className={getStatusColor(conversion.status)}>{conversion.status}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -166,29 +171,28 @@ export function PayoutsList() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        {conversion.status === "pending" && (
+                          <>
+                            <DropdownMenuItem 
+                              onClick={() => handleStatusUpdate(conversion._id, "approved")}
+                              className="text-green-600"
+                            >
+                              <Check className="mr-2 h-4 w-4" />
+                              <span>Approve</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleStatusUpdate(conversion._id, "rejected")}
+                              className="text-red-600"
+                            >
+                              <X className="mr-2 h-4 w-4" />
+                              <span>Reject</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
                         <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
                           <span>View Details</span>
                         </DropdownMenuItem>
-                        {payout.status === "pending" && (
-                          <DropdownMenuItem onClick={() => handleProcessPayout(payout._id)}>
-                            <Play className="mr-2 h-4 w-4 text-green-500" />
-                            <span>Process Payout</span>
-                          </DropdownMenuItem>
-                        )}
-                        {payout.status === "failed" && (
-                          <DropdownMenuItem onClick={() => handleProcessPayout(payout._id)}>
-                            <Play className="mr-2 h-4 w-4 text-green-500" />
-                            <span>Retry Payout</span>
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        {payout.status === "failed" && (
-                          <DropdownMenuItem>
-                            <AlertCircle className="mr-2 h-4 w-4 text-red-500" />
-                            <span>View Error Details</span>
-                          </DropdownMenuItem>
-                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -201,4 +205,3 @@ export function PayoutsList() {
     </Card>
   )
 }
-

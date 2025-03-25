@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/db/connect"
 import { getModels } from "@/lib/db/models"
+import { createPaymanService } from "@/lib/payment/payman"
 
 export async function POST(
   request: NextRequest,
@@ -8,11 +9,11 @@ export async function POST(
 ) {
   try {
     await connectToDatabase()
-    const { Payout, Conversion, Affiliate } = getModels()
+    const { Payout, Conversion, Affiliate, Settings } = getModels()
     const id = params.id
     
     // Get payout
-    const payout = await Payout.findById(id)
+    const payout = await Payout.findById(id).populate("affiliateId", "name email paymentMethod paymentDetails")
     if (!payout) {
       return NextResponse.json({ error: "Payout not found" }, { status: 404 })
     }
@@ -22,43 +23,71 @@ export async function POST(
       return NextResponse.json({ error: `Payout already ${payout.status}` }, { status: 400 })
     }
     
-    // In a real app, this would involve calling a payment processing service
-    // For this implementation, we'll simulate a successful payout
+    // Get API keys from settings
+    const settings = await Settings.findOne({})
+    const paymanApiKey = settings?.apiKeys?.paymanApiKey
     
-    // Update payout status
-    payout.status = "completed"
-    payout.processedAt = new Date()
-    
-    // Add transaction details based on payment method
-    if (payout.paymentMethod === "ACH") {
-      payout.paymentDetails = {
-        transactionId: `ach_${Math.random().toString(36).substring(2, 15)}`
-      }
-    } else {
-      payout.paymentDetails = {
-        txHash: `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
-      }
+    if (!paymanApiKey) {
+      return NextResponse.json({ error: "Payment API key not configured" }, { status: 400 })
     }
     
+    // Update payout status to processing
+    payout.status = "processing"
     await payout.save()
     
-    // Update conversions to paid status
-    await Conversion.updateMany(
-      { _id: { $in: payout.conversions } },
-      { status: "paid", payoutId: payout._id }
-    )
-    
-    // Update affiliate stats
-    await Affiliate.findByIdAndUpdate(payout.affiliateId, {
-      $inc: {
-        totalPaid: payout.amount,
-        pendingAmount: -payout.amount
+    try {
+      // Process payment with Payman
+      const paymanService = createPaymanService(paymanApiKey)
+      
+      // Update payout status
+      payout.status = "completed"
+      payout.processedAt = new Date()
+      
+      // Add transaction details based on payment method
+      if (payout.paymentMethod === "ACH") {
+        const paymentResult = await paymanService.createACHPayment(payout.affiliateId, payout.amount)
+        payout.paymentDetails = {
+          transactionId: paymentResult.transactionId
+        }
+      } else {
+        const paymentResult = await paymanService.createUSDCPayment(payout.affiliateId, payout.amount)
+        payout.paymentDetails = {
+          txHash: paymentResult.txHash
+        }
       }
-    })
-
-    return NextResponse.json(payout)
-  } catch (error) {
-    console.error(`Error processing payout: ${error}`)
-    return NextResponse.json({ error: "Failed to process payout" }, { status: 500 })
+      
+      await payout.save()
+      
+      // Update conversions to paid status
+      await Conversion.updateMany(
+        { _id: { $in: payout.conversions } },
+        { status: "paid", payoutId: payout._id }
+      )
+      
+      // Update affiliate stats
+      await Affiliate.findByIdAndUpdate(payout.affiliateId._id, {
+        $inc: {
+          totalPaid: payout.amount,
+          pendingAmount: -payout.amount
+        }
+      })
+  
+      return NextResponse.json(payout)
+    } catch (error: unknown) {
+      // Mark payout as failed
+      payout.status = "failed"
+      await payout.save()
+      
+      console.error(`Payment processing error:`, error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      return NextResponse.json({ 
+        error: "Payment processing failed", 
+        details: errorMessage 
+      }, { status: 500 })
+    }
+  } catch (error: unknown) {
+    console.error(`Error processing payout:`, error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ error: `Failed to process payout: ${errorMessage}` }, { status: 500 })
   }
 }

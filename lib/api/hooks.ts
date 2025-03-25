@@ -1,7 +1,7 @@
 /**
  * React Query hooks for API data fetching
  */
-import { useQuery, useMutation, QueryClient, QueryKey } from '@tanstack/react-query'
+import { useQuery, useMutation, QueryClient } from '@tanstack/react-query'
 import {
   affiliatesApi,
   conversionsApi,
@@ -15,7 +15,7 @@ import {
 } from './client'
 
 // Affiliates Hooks
-export function useAffiliates(status?: string) {
+export function useAffiliatesList(status?: string) {
   return useQuery({
     queryKey: ['affiliates', { status }],
     queryFn: () => affiliatesApi.getAll({ status }),
@@ -67,7 +67,7 @@ export function useDeleteAffiliate() {
 }
 
 // Conversions Hooks
-export function useConversions(params?: { status?: string, dateFrom?: string, dateTo?: string }) {
+export function useConversionsList(params?: { status?: string, dateFrom?: string, dateTo?: string, affiliateId?: string }) {
   return useQuery({
     queryKey: ['conversions', params],
     queryFn: () => conversionsApi.getAll(params),
@@ -98,7 +98,7 @@ export function useUpdateConversionStatus() {
 }
 
 // Payouts Hooks
-export function usePayouts(params?: { status?: string, dateFrom?: string, dateTo?: string }) {
+export function usePayoutsList(params?: { status?: string, dateFrom?: string, dateTo?: string }) {
   return useQuery({
     queryKey: ['payouts', params],
     queryFn: () => payoutsApi.getAll(params),
@@ -194,7 +194,7 @@ export function useAnalyticsOverview(dateFrom?: string, dateTo?: string) {
   });
 }
 
-export function useRevenueOverTime(dateFrom?: string, dateTo?: string) {
+export function useRevenueOverTime(dateFrom?: string, dateTo?: string, p0?: { enabled: boolean }) {
   return useQuery({
     queryKey: ['analytics', 'revenue', { dateFrom, dateTo }],
     queryFn: async () => {
@@ -287,3 +287,13 @@ export function useCommissionBreakdown(dateFrom?: string, dateTo?: string) {
     }
   });
 }
+
+// Re-export the original hooks with their original names for compatibility
+export { 
+  usePayoutsList as usePayouts, 
+  useAffiliatesList as useAffiliates, 
+  useConversionsList as useConversions 
+}
+
+// Export types for convenience
+export type { Payout, Affiliate, Conversion }

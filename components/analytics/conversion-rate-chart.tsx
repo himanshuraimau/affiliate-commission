@@ -16,6 +16,20 @@ import { useConversionRates } from "@/lib/api/hooks"
 export function ConversionRateChart() {
   const { data, isLoading, error } = useConversionRates()
   
+  // Log data for debugging
+  console.log("Conversion rate data:", data)
+  
+  // Prepare data for chart - ensure proper structure
+  const chartData = data && data.length > 0 ? 
+    data.map((item: { date: any; rate: any }) => ({
+      date: item.date,
+      rate: typeof item.rate === 'number' ? item.rate : 0
+    }))
+    : [];
+  
+  // Check if we have valid data to display
+  const hasValidData = chartData && chartData.length > 0;
+  
   if (isLoading) {
     return (
       <Card>
@@ -43,6 +57,20 @@ export function ConversionRateChart() {
       </Card>
     )
   }
+  
+  if (!hasValidData) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Conversion Rate</CardTitle>
+          <CardDescription>No conversion data available for the selected period</CardDescription>
+        </CardHeader>
+        <CardContent className="flex h-80 items-center justify-center">
+          <p className="text-muted-foreground">No data to display</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>
@@ -55,7 +83,7 @@ export function ConversionRateChart() {
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
           <LineChart
-            data={data}
+            data={chartData}
             margin={{
               top: 5,
               right: 10,
@@ -66,7 +94,13 @@ export function ConversionRateChart() {
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis 
               dataKey="date" 
-              tickFormatter={(value) => new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              tickFormatter={(value) => {
+                // Handle both string dates and Date objects
+                const date = typeof value === 'string' ? new Date(value) : value;
+                return date instanceof Date && !isNaN(date.getTime()) 
+                  ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                  : '';
+              }}
             />
             <YAxis 
               tickFormatter={(value) => `${value}%`}
@@ -74,7 +108,12 @@ export function ConversionRateChart() {
             />
             <Tooltip
               formatter={(value: number) => `${value.toFixed(2)}%`}
-              labelFormatter={(label) => new Date(label).toLocaleDateString()}
+              labelFormatter={(label) => {
+                const date = typeof label === 'string' ? new Date(label) : label;
+                return date instanceof Date && !isNaN(date.getTime())
+                  ? date.toLocaleDateString()
+                  : '';
+              }}
             />
             <Line
               type="monotone"

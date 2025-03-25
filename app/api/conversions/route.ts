@@ -11,12 +11,17 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status")
     const dateFrom = searchParams.get("dateFrom")
     const dateTo = searchParams.get("dateTo")
+    const affiliateId = searchParams.get("affiliateId")
 
     // Build query based on filters
     const query: any = {}
     
     if (status) {
       query.status = status
+    }
+    
+    if (affiliateId) {
+      query.affiliateId = affiliateId
     }
     
     if (dateFrom || dateTo) {
@@ -27,7 +32,10 @@ export async function GET(request: NextRequest) {
       }
       
       if (dateTo) {
-        query.createdAt.$lte = new Date(dateTo)
+        // Add one day to include the end date fully
+        const endDate = new Date(dateTo)
+        endDate.setDate(endDate.getDate() + 1)
+        query.createdAt.$lte = endDate
       }
     }
 

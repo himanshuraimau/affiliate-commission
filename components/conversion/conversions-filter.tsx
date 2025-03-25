@@ -10,28 +10,31 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { usePayoutsFilter } from "./payouts-filter-context"
+import { useConversionsFilter } from "./conversions-filter-context"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useAffiliates } from "@/lib/api/hooks"
 
-export function PayoutsFilter() {
+export function ConversionsFilter() {
   const {
     dateRange,
     statusFilter,
-    paymentMethodFilter,
+    affiliateFilter,
     searchTerm,
     setDateRange,
     setStatusFilter,
-    setPaymentMethodFilter,
+    setAffiliateFilter,
     setSearchTerm,
     clearFilters
-  } = usePayoutsFilter()
+  } = useConversionsFilter()
+  
+  const { data: affiliates = [], isLoading: isLoadingAffiliates } = useAffiliates()
 
   // Count active filters (excluding search)
   const activeFiltersCount = [
     dateRange.from || dateRange.to ? 1 : 0,
     statusFilter !== "all" ? 1 : 0,
-    paymentMethodFilter !== "all" ? 1 : 0
+    affiliateFilter !== "all" ? 1 : 0
   ].reduce((a, b) => a + b, 0)
 
   // Handle date selection with proper typing
@@ -50,7 +53,7 @@ export function PayoutsFilter() {
     <div className="flex flex-col gap-4 md:flex-row md:items-center">
       <div className="flex flex-1 items-center gap-2">
         <Input
-          placeholder="Search by affiliate..."
+          placeholder="Search by order ID or customer..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
@@ -84,7 +87,7 @@ export function PayoutsFilter() {
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="end">
             <Calendar
-              initialFocus
+              autoFocus
               mode="range"
               selected={{
                 from: dateRange.from,
@@ -106,23 +109,26 @@ export function PayoutsFilter() {
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
           </SelectContent>
         </Select>
 
-        <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+        <Select value={affiliateFilter} onValueChange={setAffiliateFilter}>
           <SelectTrigger className={cn(
-            "w-[150px]",
-            paymentMethodFilter !== "all" && "bg-primary text-primary-foreground"
+            "w-[180px]",
+            affiliateFilter !== "all" && "bg-primary text-primary-foreground"
           )}>
-            <SelectValue placeholder="Payment Method" />
+            <SelectValue placeholder="Affiliate" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Methods</SelectItem>
-            <SelectItem value="ACH">ACH</SelectItem>
-            <SelectItem value="USDC">USDC</SelectItem>
+            <SelectItem value="all">All Affiliates</SelectItem>
+            {affiliates.map(affiliate => (
+              <SelectItem key={affiliate._id} value={affiliate._id}>
+                {affiliate.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         
@@ -147,4 +153,3 @@ export function PayoutsFilter() {
     </div>
   )
 }
-
