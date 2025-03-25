@@ -5,30 +5,28 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Generate a unique promo code
-export async function generatePromoCode(AffiliateModel: any) {
-  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-  let attempts = 0
-  const maxAttempts = 10
-
-  while (attempts < maxAttempts) {
-    let code = ""
-    for (let i = 0; i < 6; i++) {
-      code += characters.charAt(Math.floor(Math.random() * characters.length))
+export async function generatePromoCode(Affiliate: any): Promise<string> {
+  const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed confusing characters like O, 0, I, 1
+  const codeLength = 7;
+  let isUnique = false;
+  let promoCode = '';
+  
+  // Keep generating until we get a unique code
+  while (!isUnique) {
+    promoCode = '';
+    // Generate random code
+    for (let i = 0; i < codeLength; i++) {
+      promoCode += characters.charAt(Math.floor(Math.random() * characters.length));
     }
-
-    // Check if code already exists
-    const existingAffiliate = await AffiliateModel.findOne({ promoCode: code })
-
+    
+    // Check if code is unique
+    const existingAffiliate = await Affiliate.findOne({ promoCode });
     if (!existingAffiliate) {
-      return code
+      isUnique = true;
     }
-
-    attempts++
   }
-
-  // If we couldn't generate a unique code after max attempts, use timestamp
-  return `AFF${Date.now().toString().slice(-6)}`
+  
+  return promoCode;
 }
 
 // Format currency

@@ -1,8 +1,8 @@
-import { DashboardHeader } from "@/components/dashboard-header"
-import { DashboardCards } from "@/components/dashboard-cards"
-import { RecentConversions } from "@/components/recent-conversions"
-import { TopAffiliates } from "@/components/top-affiliates"
-import { PayoutOverview } from "@/components/payout-overview"
+import { DashboardHeader } from "@/components/dashboard/dashboard-header"
+import { DashboardCards } from "@/components/dashboard/dashboard-cards"
+import { RecentConversions } from "@/components/conversions/recent-conversions"
+import { TopAffiliates } from "@/components/affiliates/top-affiliates"
+import { PayoutOverview } from "@/components/payout/payout-overview"
 
 export default async function DashboardPage() {
   return (

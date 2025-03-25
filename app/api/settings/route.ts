@@ -7,9 +7,10 @@ export async function GET() {
     await connectToDatabase()
     const { Settings } = getModels()
 
-    // Get or create settings
+    // Get settings - always return the first document
     let settings = await Settings.findOne({})
-
+    
+    // Create default settings if none exist
     if (!settings) {
       settings = await Settings.create({
         payoutSettings: {
@@ -18,6 +19,7 @@ export async function GET() {
           payoutDay: 1,
           automaticPayouts: true,
         },
+        apiKeys: {},
         commissionDefaults: {
           defaultRate: 10,
           minimumOrderAmount: 0,
@@ -25,74 +27,44 @@ export async function GET() {
       })
     }
 
-    // Don't return API keys in the response
-    const response = { ...settings.toObject() }
-    if (response.apiKeys) {
-      // Replace actual keys with boolean indicating if they exist
-      Object.keys(response.apiKeys).forEach((key) => {
-        if (response.apiKeys[key]) {
-          response.apiKeys[key] = true
-        }
-      })
-    }
-
-    return NextResponse.json(response)
+    return NextResponse.json(settings)
   } catch (error) {
     console.error("Error fetching settings:", error)
     return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 })
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PATCH(request: NextRequest) {
   try {
     await connectToDatabase()
     const { Settings } = getModels()
-
+    
     const data = await request.json()
-
-    // Get or create settings
+    
+    // Get existing settings
     let settings = await Settings.findOne({})
-
+    
+    // Create if doesn't exist
     if (!settings) {
       settings = new Settings({})
     }
-
-    // Update settings with new data
+    
+    // Update with new data
     if (data.payoutSettings) {
-      settings.payoutSettings = {
-        ...settings.payoutSettings,
-        ...data.payoutSettings,
-      }
+      Object.assign(settings.payoutSettings, data.payoutSettings)
     }
-
-    if (data.commissionDefaults) {
-      settings.commissionDefaults = {
-        ...settings.commissionDefaults,
-        ...data.commissionDefaults,
-      }
-    }
-
+    
     if (data.apiKeys) {
-      settings.apiKeys = {
-        ...settings.apiKeys,
-        ...data.apiKeys,
-      }
+      Object.assign(settings.apiKeys, data.apiKeys)
     }
-
+    
+    if (data.commissionDefaults) {
+      Object.assign(settings.commissionDefaults, data.commissionDefaults)
+    }
+    
     await settings.save()
 
-    // Don't return API keys in the response
-    const response = { ...settings.toObject() }
-    if (response.apiKeys) {
-      // Replace actual keys with boolean indicating if they exist
-      Object.keys(response.apiKeys).forEach((key) => {
-        if (response.apiKeys[key]) {
-          response.apiKeys[key] = true
-        }
-      })
-    }
-
-    return NextResponse.json(response)
+    return NextResponse.json(settings)
   } catch (error) {
     console.error("Error updating settings:", error)
     return NextResponse.json({ error: "Failed to update settings" }, { status: 500 })

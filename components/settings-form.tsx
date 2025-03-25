@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -12,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useSettings, useUpdateSettings } from "@/lib/api/hooks"
 
 const payoutSettingsSchema = z.object({
   minimumPayoutAmount: z.coerce.number().min(1, {
@@ -37,52 +40,115 @@ const apiKeysSchema = z.object({
 
 export function SettingsForm() {
   const [activeTab, setActiveTab] = useState("payout")
+  
+  // Fetch settings from API
+  const { data: settings, isLoading } = useSettings()
+  
+  // Update settings mutation
+  const updateSettings = useUpdateSettings()
 
-  // In a real app, this data would come from an API call
-  const defaultValues = {
-    payoutSettings: {
+  const payoutForm = useForm<z.infer<typeof payoutSettingsSchema>>({
+    resolver: zodResolver(payoutSettingsSchema),
+    defaultValues: {
       minimumPayoutAmount: 50,
       payoutFrequency: "monthly",
       payoutDay: 1,
       automaticPayouts: true,
     },
-    commissionSettings: {
-      defaultRate: 10,
-      minimumOrderAmount: 0,
-    },
-    apiKeys: {
-      paymanApiKey: "",
-    },
-  }
-
-  const payoutForm = useForm<z.infer<typeof payoutSettingsSchema>>({
-    resolver: zodResolver(payoutSettingsSchema),
-    defaultValues: defaultValues.payoutSettings,
   })
 
   const commissionForm = useForm<z.infer<typeof commissionSettingsSchema>>({
     resolver: zodResolver(commissionSettingsSchema),
-    defaultValues: defaultValues.commissionSettings,
+    defaultValues: {
+      defaultRate: 10,
+      minimumOrderAmount: 0,
+    },
   })
 
   const apiKeysForm = useForm<z.infer<typeof apiKeysSchema>>({
     resolver: zodResolver(apiKeysSchema),
-    defaultValues: defaultValues.apiKeys,
+    defaultValues: {
+      paymanApiKey: "",
+    },
   })
 
-  function onPayoutSubmit(values: z.infer<typeof payoutSettingsSchema>) {
-    // In a real app, this would save to the API
-    console.log(values)
+  // Update the forms when settings load
+  useEffect(() => {
+    if (settings) {
+      payoutForm.reset({
+        minimumPayoutAmount: settings.payoutSettings.minimumPayoutAmount,
+        payoutFrequency: settings.payoutSettings.payoutFrequency,
+        payoutDay: settings.payoutSettings.payoutDay || 1,
+        automaticPayouts: settings.payoutSettings.automaticPayouts,
+      })
+      
+      commissionForm.reset({
+        defaultRate: settings.commissionDefaults.defaultRate,
+        minimumOrderAmount: settings.commissionDefaults.minimumOrderAmount,
+      })
+      
+      apiKeysForm.reset({
+        paymanApiKey: settings.apiKeys.paymanApiKey || "",
+      })
+    }
+  }, [settings, payoutForm, commissionForm, apiKeysForm])
+
+  async function onPayoutSubmit(values: z.infer<typeof payoutSettingsSchema>) {
+    try {
+      await updateSettings.mutateAsync({
+        payoutSettings: values
+      })
+      toast.success("Payout settings updated successfully")
+    } catch (error) {
+      toast.error("Failed to update payout settings")
+    }
   }
 
-  function onCommissionSubmit(values: z.infer<typeof commissionSettingsSchema>) {
-    // In a real app, this would save to the API
-    console.log(values)
+  async function onCommissionSubmit(values: z.infer<typeof commissionSettingsSchema>) {
+    try {
+      await updateSettings.mutateAsync({
+        commissionDefaults: values
+      })
+      toast.success("Commission settings updated successfully")
+    } catch (error) {
+      toast.error("Failed to update commission settings")
+    }
   }
 
-  function onApiKeysSubmit(values: z.infer<typeof apiKeysSchema>) {
-    // In a real app, this would save to the API
-    console.log(values)
+  async function onApiKeysSubmit(values: z.infer<typeof apiKeysSchema>) {
+    try {
+      await updateSettings.mutateAsync({
+        apiKeys: values
+      })
+      toast.success("API keys updated successfully")
+    } catch (error) {
+      toast.error("Failed to update API keys")
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-full" />
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-60" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ))}
+              <Skeleton className="h-10 w-24" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -207,7 +273,9 @@ export function SettingsForm() {
                   )}
                 />
 
-                <Button type="submit">Save Payout Settings</Button>
+                <Button type="submit" disabled={updateSettings.isPending}>
+                  {updateSettings.isPending ? "Saving..." : "Save Payout Settings"}
+                </Button>
               </form>
             </Form>
           </CardContent>

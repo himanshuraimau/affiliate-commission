@@ -1,4 +1,4 @@
-import { AffiliatesList } from "@/components/affiliates-list"
+import { AffiliatesList } from "@/components/affiliates/affiliates-list"
 import { Button } from "@/components/ui/button"
 import { PlusIcon } from "lucide-react"
 import Link from "next/link"

@@ -1,18 +1,16 @@
 import type React from "react"
-import { SidebarProvider } from "@/components/ui/sidebar"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { AffiliateDashboardSidebar } from "@/components/affiliate-dashboard-sidebar"
+import { AffiliateDashboardSidebar } from "@/components/affiliates/affiliate-dashboard-sidebar"
 import { Inter } from "next/font/google"
+import { Providers } from "@/lib/providers"
 import "./globals.css"
 import type { Metadata } from "next"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Affiliate Management Dashboard",
-  description: "AI-powered Affiliate Management & Payment Automation System",
-    generator: 'v0.dev'
+  title: "Affiliate Commission System",
+  description: "Manage affiliate commissions and payouts",
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -23,18 +21,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <SidebarProvider>
+        <Providers>
+          <div className="flex min-h-screen">
             <AffiliateDashboardSidebar />
             <main className="flex-1 p-6 md:p-8 pt-6 md:overflow-y-auto">{children}</main>
-            <Toaster />
-          </SidebarProvider>
-        </ThemeProvider>
+          </div>
+        </Providers>
       </body>
     </html>
   )
 }
-
-
-
-import './globals.css'

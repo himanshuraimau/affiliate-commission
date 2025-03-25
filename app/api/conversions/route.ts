@@ -9,25 +9,29 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams
     const status = searchParams.get("status")
-    const affiliateId = searchParams.get("affiliateId")
-    const startDate = searchParams.get("startDate")
-    const endDate = searchParams.get("endDate")
+    const dateFrom = searchParams.get("dateFrom")
+    const dateTo = searchParams.get("dateTo")
 
-    // Build query based on search params
+    // Build query based on filters
     const query: any = {}
-
-    if (status) query.status = status
-    if (affiliateId) query.affiliateId = affiliateId
-
-    if (startDate || endDate) {
+    
+    if (status) {
+      query.status = status
+    }
+    
+    if (dateFrom || dateTo) {
       query.createdAt = {}
-      if (startDate) query.createdAt.$gte = new Date(startDate)
-      if (endDate) query.createdAt.$lte = new Date(endDate)
+      
+      if (dateFrom) {
+        query.createdAt.$gte = new Date(dateFrom)
+      }
+      
+      if (dateTo) {
+        query.createdAt.$lte = new Date(dateTo)
+      }
     }
 
-    const conversions = await Conversion.find(query)
-      .sort({ createdAt: -1 })
-      .populate("affiliateId", "name email promoCode")
+    const conversions = await Conversion.find(query).sort({ createdAt: -1 })
 
     return NextResponse.json(conversions)
   } catch (error) {
@@ -42,42 +46,41 @@ export async function POST(request: NextRequest) {
     const { Conversion, Affiliate } = getModels()
 
     const data = await request.json()
-    const { promoCode, orderId, orderAmount, customer } = data
-
-    // Find affiliate by promo code
-    const affiliate = await Affiliate.findOne({ promoCode })
-
-    if (!affiliate) {
-      return NextResponse.json({ error: "Invalid promo code" }, { status: 400 })
+    
+    // Validate required fields
+    if (!data.affiliateId || !data.orderId || !data.orderAmount || !data.promoCode || !data.customer?.email) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
-
-    // Check if order already exists
-    const existingOrder = await Conversion.findOne({ orderId })
-
-    if (existingOrder) {
-      return NextResponse.json({ error: "Order already processed" }, { status: 400 })
+    
+    // Check if order already exists to prevent duplicates
+    const existingConversion = await Conversion.findOne({ orderId: data.orderId })
+    if (existingConversion) {
+      return NextResponse.json({ error: "Conversion with this order ID already exists" }, { status: 409 })
     }
-
-    // Calculate commission amount
-    const commissionAmount = (orderAmount * affiliate.commissionRate) / 100
-
-    // Create conversion record
-    const conversion = new Conversion({
-      affiliateId: affiliate._id,
-      orderId,
-      orderAmount,
-      commissionAmount,
-      promoCode,
-      customer,
-      status: "pending",
-    })
-
+    
+    // Get affiliate to calculate commission amount if not provided
+    if (!data.commissionAmount) {
+      const affiliate = await Affiliate.findById(data.affiliateId)
+      if (!affiliate) {
+        return NextResponse.json({ error: "Affiliate not found" }, { status: 404 })
+      }
+      
+      data.commissionAmount = data.orderAmount * (affiliate.commissionRate / 100)
+    }
+    
+    // Create the conversion
+    const conversion = new Conversion(data)
     await conversion.save()
-
-    // Update affiliate pending amount
-    await Affiliate.findByIdAndUpdate(affiliate._id, {
-      $inc: { pendingAmount: commissionAmount },
-    })
+    
+    // Update affiliate stats if conversion is already approved
+    if (data.status === "approved") {
+      await Affiliate.findByIdAndUpdate(data.affiliateId, {
+        $inc: {
+          totalEarned: data.commissionAmount,
+          pendingAmount: data.commissionAmount
+        }
+      })
+    }
 
     return NextResponse.json(conversion, { status: 201 })
   } catch (error) {

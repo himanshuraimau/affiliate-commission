@@ -1,15 +1,27 @@
 import mongoose from "mongoose"
 
+declare global {
+  var mongoose: { conn: any; promise: any } | undefined
+}
+
 const MONGODB_URI = process.env.MONGODB_URI || ""
 
 if (!MONGODB_URI) {
   throw new Error("Please define the MONGODB_URI environment variable inside .env.local")
 }
 
-let cached = global.mongoose
+// Define interface for cached type
+interface MongooseCache {
+  conn: any;
+  promise: any;
+}
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null }
+// Initialize with proper typing
+let cached: MongooseCache = global.mongoose || { conn: null, promise: null }
+
+// Set global.mongoose if it wasn't already set
+if (!global.mongoose) {
+  global.mongoose = cached
 }
 
 export async function connectToDatabase() {
