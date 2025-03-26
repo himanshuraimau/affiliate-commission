@@ -18,6 +18,7 @@ import { useRevenueOverTime } from "@/lib/api/hooks"
 
 export function RevenueOverTimeChart() {
   const { data, isLoading, error } = useRevenueOverTime()
+  console.log("Revenue Over Time Chart Data", data)
   
   if (isLoading) {
     return (
@@ -90,7 +91,7 @@ export function RevenueOverTimeChart() {
             />
             <Area 
               type="monotone" 
-              dataKey="revenue" 
+              dataKey="orderAmount" 
               name="Total Revenue"
               stroke="#8884d8" 
               fillOpacity={1} 
@@ -98,7 +99,7 @@ export function RevenueOverTimeChart() {
             />
             <Area 
               type="monotone" 
-              dataKey="commission" 
+              dataKey="commissionAmount" 
               name="Commission"
               stroke="#82ca9d" 
               fillOpacity={1}
