@@ -53,6 +53,3 @@ export async function connectDB() {
   return cached.conn
 }
 
-// Export the same function with the name expected by other modules
-export const connectToDatabase = connectDB;
-

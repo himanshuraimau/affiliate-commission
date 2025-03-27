@@ -30,20 +30,20 @@ export async function generatePromoCode(Affiliate: any): Promise<string> {
 }
 
 // Format currency
-export function formatCurrency(amount: number) {
+export function formatCurrency(amount: number, currency = "USD"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
-  }).format(amount)
+    currency
+  }).format(amount);
 }
 
 // Format date
-export function formatDate(date: Date | string) {
+export function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "short",
-    day: "numeric",
-  }).format(new Date(date))
+    day: "numeric"
+  }).format(date);
 }
 
 // Calculate date range for filtering

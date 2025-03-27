@@ -100,6 +100,24 @@ export interface Settings {
   updatedAt: string;
 }
 
+export interface DashboardStats {
+  totalAffiliates: number;
+  activeAffiliates: number;
+  pendingConversions: number;
+  totalRevenue: number;
+  totalCommissions: number;
+  pendingCommissions: number;
+  conversionRate: number;
+  recentConversions: Conversion[];
+  topAffiliates: {
+    _id: string;
+    name: string;
+    email: string;
+    totalEarned: number;
+    promoCode: string;
+  }[];
+}
+
 // Affiliates API
 export const affiliatesApi = {
   getAll: async (params?: { status?: string }): Promise<Affiliate[]> => {

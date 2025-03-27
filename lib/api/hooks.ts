@@ -1,16 +1,16 @@
 /**
  * React Query hooks for API data fetching
  */
-import { useQuery, useMutation, QueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, QueryClient, useQueryClient } from '@tanstack/react-query'
 import {
   affiliatesApi,
   conversionsApi,
+  Payout,
   payoutsApi,
   settingsApi,
   statsApi,
   type Affiliate,
   type Conversion,
-  type Payout,
   type Settings
 } from './client'
 

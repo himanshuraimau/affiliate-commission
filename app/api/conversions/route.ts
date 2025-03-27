@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db/connect"
+import { connectDB } from "@/lib/db/connect"
 import { getModels } from "@/lib/db/models"
 
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase()
+    await connectDB()
     const { Conversion } = getModels()
 
     const searchParams = request.nextUrl.searchParams
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase()
+    await connectDB()
     const { Conversion, Affiliate } = getModels()
 
     const data = await request.json()

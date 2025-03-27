@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getModels } from '@/lib/db/models';
-import { connectToDatabase } from '@/lib/db/connect';
+import { connectDB } from '@/lib/db/connect';
 import mongoose from 'mongoose';
 
 export async function POST(request: Request) {
   try {
-    await connectToDatabase();
+    await connectDB();
     const { Affiliate } = getModels();
     
     const data = await request.json();
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    await connectToDatabase();
+    await connectDB();
     const { Affiliate } = getModels();
     
     const affiliates = await Affiliate.find().sort({ createdAt: -1 });
