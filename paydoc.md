@@ -1,30 +1,125 @@
-#### Create Test Payee
+Create Payee
+Create a new payee (aka payee) for future payments to be sent to
+
+POST
+/
+payments
+/
+payees
+
+Try it
+​
+Payment Destination Types
+US_ACH - US Bank Account
+CRYPTO_ADDRESS - Cryptocurrency Address
+PAYMAN_WALLET - Payman Wallet (Coming Soon)
+Authorizations
+​
+x-payman-api-secret
+stringheaderrequired
+Body
+application/json
+Option 1
+Option 2
+Option 3
+Option 4
+A Test Dollar payee
+
+​
+type
+enum<string>required
+The type of payee
+
+Available options: TEST_RAILS 
+​
+name
+stringrequired
+The name you wish to associate with this payee for future lookups.
+
+​
+tags
+string[]
+Any additional labels you wish to assign to this payee
+
+Any additional labels you wish to assign to this payee
+
+Response
+200
+
+200
+application/vnd.payman.v1+json
+The payment was successful.
+​
+name
+stringrequired
+The user-assigned name of the payee
+
+​
+organizationId
+stringrequired
+​
+type
+enum<string>required
+The type of payee
+
+Available options: US_ACH, CRYPTO_ADDRESS, PAYMAN_WALLET, TEST_RAILS 
+​
+id
+string
+​
+createdAt
+string
+​
+updatedAt
+string
+​
+createdBy
+string
+​
+updatedBy
+string
+​
+providerInfo
+object
+​
+tags
+string[]
+Tags to help categorize the payee
+
+Tags to help categorize the payee
+
+​
+payeeDetails
+object
+​
+contactDetails
+object
+Contact details for this payee
+
+
+Show child attributes
+
+​
+status
+enum<string>
+The status of the payee
+
+Available options: ACTIVE, ARCHIVED, DELETED 
+​
+searchHashes
+object
+​
+replacesId
+string
+The ID of the payee this entity replaces
+
+
+
+
 const options = {
   method: 'POST',
-  headers: {
-    'x-payman-api-secret': '<api-key>',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    type: "TEST_RAILS",
-    name: "<string>",
-    tags: ["<string>"],
-    contactDetails: {
-      email: "<string>",
-      phoneNumber: "<string>",
-      address: {
-        addressLine1: "<string>",
-        addressLine2: "<string>",
-        addressLine3: "<string>",
-        addressLine4: "<string>",
-        locality: "<string>",
-        region: "<string>",
-        postcode: "<string>",
-        country: "<string>"
-      },
-      taxId: "<string>"
-    }
-  })
+  headers: {'x-payman-api-secret': '<api-key>', 'Content-Type': 'application/json'},
+  body: '{"type":"CRYPTO_ADDRESS","address":"<string>","chain":"<string>","currency":"<string>","name":"<string>","tags":["<string>"],"contactDetails":{"email":"<string>","phoneNumber":"<string>","address":{"addressLine1":"<string>","addressLine2":"<string>","addressLine3":"<string>","addressLine4":"<string>","locality":"<string>","region":"<string>","postcode":"<string>","country":"<string>"},"taxId":"<string>"}}'
 };
 
 fetch('https://agent.payman.ai/api/payments/payees', options)
@@ -34,69 +129,37 @@ fetch('https://agent.payman.ai/api/payments/payees', options)
 
 
 
-resonse 200 
-{
-  "id": "<string>",   // payeeId
-  "createdAt": "2025-03-27T05:20:24.452876342Z",  
-  "updatedAt": "2025-03-27T05:20:24.452876342Z",  
-  "version": 0,  
-  "createdBy": "<string>",  
-  "updatedBy": "<string>",  
-  "name": "<string>",  
-  "organizationId": "<string>",  
-  "type": "TEST_RAILS",  
-  "payeeDetails": {},  
-  "status": "ACTIVE",  
-  "tags": ["<string>"],  
-  "providerInfo": {},  
-  "contactDetails": {  
-    "email": "<string>",  
-    "phoneNumber": "<string>",  
-    "address": {  
-      "addressLine1": "<string>",  
-      "addressLine2": "<string>",  
-      "addressLine3": "<string>",  
-      "addressLine4": "<string>",  
-      "locality": "<string>",  
-      "region": "<string>",  
-      "postcode": "<string>",  
-      "country": "<string>"  
-    },  
-    "taxId": "<string>"  
-  },  
-  "searchHashes": {},  
-  "replacesId": "<string>"  
-}
 
-
-
-##### SEND PAYMAN
-const options = {
-  method: 'POST',
-  headers: {
-    'x-payman-api-secret': '<api-key>',
-    'Content-Type': 'application/json'
+  {
+  "id": "<string>",
+  "createdAt": "2023-11-07T05:31:56Z",
+  "updatedAt": "2023-11-07T05:31:56Z",
+  "createdBy": "<string>",
+  "updatedBy": "<string>",
+  "providerInfo": {},
+  "name": "<string>",
+  "organizationId": "<string>",
+  "tags": [
+    "<string>"
+  ],
+  "type": "US_ACH",
+  "payeeDetails": {},
+  "contactDetails": {
+    "email": "<string>",
+    "phoneNumber": "<string>",
+    "address": {
+      "addressLine1": "<string>",
+      "addressLine2": "<string>",
+      "addressLine3": "<string>",
+      "addressLine4": "<string>",
+      "locality": "<string>",
+      "region": "<string>",
+      "postcode": "<string>",
+      "country": "<string>"
+    },
+    "taxId": "<string>"
   },
-  body: JSON.stringify({
-    walletId: "<string>",  // Optional: Wallet ID if multiple wallets exist
-    amountDecimal: 10.00,  // Replace with the actual amount
-    payeeId: "<string>",   // Replace with the valid payee ID from /payments/payees
-    memo: "Payment for services",  // Optional: Add any payment note
-    metadata: {}  // Optional: Additional metadata if required
-  })
-};
-
-fetch('https://agent.payman.ai/api/payments/send-payment', options)
-  .then(response => response.json())
-  .then(response => {
-    console.log("Payment Response:", response);
-  })
-  .catch(err => console.error("Error:", err));
-
-
-
-{
-  "reference": "<string>",  // Unique Payman reference for the transaction
-  "externalReference": "<string>",  // Blockchain transaction hash (if applicable)
-  "status": "INITIATED"  // Payment status: INITIATED, AWAITING_APPROVAL, REJECTED
+  "status": "ACTIVE",
+  "searchHashes": {},
+  "replacesId": "<string>"
 }
