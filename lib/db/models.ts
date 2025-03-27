@@ -9,14 +9,26 @@ export interface IAffiliateDocument extends Document {
   phone?: string
   promoCode: string
   commissionRate: number
-  paymentMethod: "ACH" | "USDC"
+  paymentMethod: "TEST_RAILS"
   paymentDetails: {
-    achAccount?: {
-      accountNumber: string
-      routingNumber: string
-      accountName: string
+    name: string,
+    payeeId?: string
+    contactDetails?: {
+      email?: string
+      phoneNumber?: string
+      address?: {
+        addressLine1?: string
+        addressLine2?: string
+        addressLine3?: string
+        addressLine4?: string
+        locality?: string
+        region?: string
+        postcode?: string
+        country?: string
+      }
+      taxId?: string
     }
-    usdcWallet?: string
+    tags?: string[]
   }
   status: "active" | "inactive" | "pending"
   totalEarned: number
@@ -33,14 +45,26 @@ const AffiliateSchema = new Schema<IAffiliateDocument>(
     phone: { type: String },
     promoCode: { type: String, required: true, unique: true },
     commissionRate: { type: Number, required: true, default: 10 }, // Percentage
-    paymentMethod: { type: String, enum: ["ACH", "USDC"], required: true },
+    paymentMethod: { type: String, enum: ["TEST_RAILS"], required: true, default: "TEST_RAILS" },
     paymentDetails: {
-      achAccount: {
-        accountNumber: { type: String },
-        routingNumber: { type: String },
-        accountName: { type: String },
+      name: { type: String, required: true },
+      payeeId: { type: String },
+      contactDetails: {
+        email: { type: String },
+        phoneNumber: { type: String },
+        address: {
+          addressLine1: { type: String },
+          addressLine2: { type: String },
+          addressLine3: { type: String },
+          addressLine4: { type: String },
+          locality: { type: String },
+          region: { type: String },
+          postcode: { type: String },
+          country: { type: String },
+        },
+        taxId: { type: String }
       },
-      usdcWallet: { type: String },
+      tags: [{ type: String }]
     },
     status: {
       type: String,
@@ -101,10 +125,13 @@ export interface IPayoutDocument extends Document {
   affiliateId: mongoose.Types.ObjectId
   amount: number
   conversions: mongoose.Types.ObjectId[]
-  paymentMethod: "ACH" | "USDC"
+  paymentMethod: "TEST_RAILS"
   paymentDetails: {
-    transactionId?: string
-    txHash?: string
+    reference?: string
+    externalReference?: string
+    memo?: string
+    walletId?: string
+    metadata?: Record<string, any>
   }
   status: "pending" | "processing" | "completed" | "failed"
   processedAt?: Date
@@ -121,10 +148,13 @@ const PayoutSchema = new Schema<IPayoutDocument>(
     },
     amount: { type: Number, required: true },
     conversions: [{ type: Schema.Types.ObjectId, ref: "Conversion" }],
-    paymentMethod: { type: String, enum: ["ACH", "USDC"], required: true },
+    paymentMethod: { type: String, enum: ["TEST_RAILS"], required: true, default: "TEST_RAILS" },
     paymentDetails: {
-      transactionId: { type: String },
-      txHash: { type: String },
+      reference: { type: String },
+      externalReference: { type: String },
+      memo: { type: String },
+      walletId: { type: String },
+      metadata: { type: Schema.Types.Mixed }
     },
     status: {
       type: String,
