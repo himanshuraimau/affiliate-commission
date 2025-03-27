@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
 import { usePayoutsFilter } from "./payouts-filter-context"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -19,15 +18,13 @@ export function PayoutsFilter() {
     dateRange,
     statusFilter,
     paymentMethodFilter,
-    searchTerm,
     setDateRange,
     setStatusFilter,
     setPaymentMethodFilter,
-    setSearchTerm,
     clearFilters
   } = usePayoutsFilter()
 
-  // Count active filters (excluding search)
+  // Count active filters
   const activeFiltersCount = [
     dateRange.from || dateRange.to ? 1 : 0,
     statusFilter !== "all" ? 1 : 0,
@@ -48,14 +45,7 @@ export function PayoutsFilter() {
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center">
-      <div className="flex flex-1 items-center gap-2">
-        <Input
-          placeholder="Search by affiliate..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
-      </div>
+      <div className="flex-1"></div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Popover>

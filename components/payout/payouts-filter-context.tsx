@@ -10,11 +10,9 @@ interface PayoutsFilterContextType {
   }
   statusFilter: string
   paymentMethodFilter: string
-  searchTerm: string
   setDateRange: (range: { from: Date | undefined; to: Date | undefined }) => void
   setStatusFilter: (status: string) => void
   setPaymentMethodFilter: (method: string) => void
-  setSearchTerm: (term: string) => void
   clearFilters: () => void
 }
 
@@ -31,13 +29,11 @@ export function PayoutsFilterProvider({ children }: { children: ReactNode }) {
   
   const [statusFilter, setStatusFilter] = useState("all")
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("all")
-  const [searchTerm, setSearchTerm] = useState("")
   
   const clearFilters = () => {
     setDateRange({ from: undefined, to: undefined })
     setStatusFilter("all")
     setPaymentMethodFilter("all")
-    setSearchTerm("")
   }
   
   return (
@@ -46,11 +42,9 @@ export function PayoutsFilterProvider({ children }: { children: ReactNode }) {
         dateRange,
         statusFilter,
         paymentMethodFilter,
-        searchTerm,
         setDateRange,
         setStatusFilter,
         setPaymentMethodFilter,
-        setSearchTerm,
         clearFilters,
       }}
     >

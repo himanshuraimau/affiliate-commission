@@ -24,7 +24,7 @@ if (!global.mongoose) {
   global.mongoose = cached
 }
 
-export async function connectToDatabase() {
+export async function connectDB() {
   if (cached.conn) {
     return cached.conn
   }
@@ -48,4 +48,7 @@ export async function connectToDatabase() {
 
   return cached.conn
 }
+
+// Export the same function with the name expected by other modules
+export const connectToDatabase = connectDB;
 

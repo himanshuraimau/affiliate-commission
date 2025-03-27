@@ -21,7 +21,7 @@ import { usePayoutsFilter } from "./payouts-filter-context"
 
 export function PayoutsList() {
   const { toast } = useToast()
-  const { dateRange, statusFilter, paymentMethodFilter, searchTerm } = usePayoutsFilter()
+  const { dateRange, statusFilter, paymentMethodFilter } = usePayoutsFilter()
   
   // Format date for API
   const formatDateParam = (date: Date | undefined) => {
@@ -55,15 +55,6 @@ export function PayoutsList() {
     })
     // Apply payment method filter client-side if needed
     .filter(payout => paymentMethodFilter === "all" || payout.paymentMethod === paymentMethodFilter)
-    // Apply search filter
-    .filter(payout => {
-      if (!searchTerm) return true
-      const searchLower = searchTerm.toLowerCase()
-      return (
-        payout.affiliateName.toLowerCase().includes(searchLower) ||
-        payout.affiliateEmail.toLowerCase().includes(searchLower)
-      )
-    })
     // Sort by creation date descending
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 

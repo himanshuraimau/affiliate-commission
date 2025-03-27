@@ -37,15 +37,6 @@ const affiliateFormSchema = z.object({
   phone: z.string().optional(),
   promoCode: z.string().optional(),
   commissionRate: z.coerce.number().min(0).max(100),
-  paymentMethod: z.enum(["ACH", "USDC"]),
-  paymentDetails: z.object({
-    achAccount: z.object({
-      accountNumber: z.string().optional(),
-      routingNumber: z.string().optional(),
-      accountName: z.string().optional(),
-    }).optional(),
-    usdcWallet: z.string().optional(),
-  }),
   status: z.enum(["active", "inactive", "pending"]),
 })
 
@@ -63,51 +54,66 @@ export function AffiliateForm() {
       phone: "",
       promoCode: "",
       commissionRate: 10,
-      paymentMethod: "ACH",
-      paymentDetails: {
-        achAccount: {
-          accountNumber: "",
-          routingNumber: "",
-          accountName: "",
-        },
-        usdcWallet: "",
-      },
       status: "pending",
     },
   })
 
-  const paymentMethod = form.watch("paymentMethod")
-
   async function onSubmit(values: AffiliateFormValues) {
     setIsSubmitting(true)
     try {
-      // Clean up empty payment details based on payment method
-      if (values.paymentMethod === "ACH") {
-        values.paymentDetails.usdcWallet = undefined
-      } else {
-        values.paymentDetails.achAccount = undefined
+      // First, create a TEST_RAILS payee via Payman API
+      const payeeResponse = await fetch("/api/payments/create-payee", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+          phone: values.phone,
+        }),
+      });
+
+      if (!payeeResponse.ok) {
+        throw new Error("Failed to create payment payee");
       }
+
+      const payeeData = await payeeResponse.json();
+      
+      // Now create the affiliate with the payee ID
+      const affiliateData = {
+        ...values,
+        paymentMethod: "TEST_RAILS", // Always use TEST_RAILS
+        paymentDetails: {
+          name: values.name,
+          payeeId: payeeData.id,
+          contactDetails: {
+            email: values.email,
+            phoneNumber: values.phone,
+          }
+        }
+      };
 
       const response = await fetch("/api/affiliates", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
-      })
+        body: JSON.stringify(affiliateData),
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to create affiliate")
+        throw new Error("Failed to create affiliate");
       }
 
-      toast.success("Affiliate created successfully!")
-      router.push("/affiliates")
-      router.refresh()
+      toast.success("Affiliate created successfully!");
+      router.push("/affiliates");
+      router.refresh();
     } catch (error) {
-      console.error("Error creating affiliate:", error)
-      toast.error("Failed to create affiliate. Please try again.")
+      console.error("Error creating affiliate:", error);
+      toast.error("Failed to create affiliate. Please try again.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -228,100 +234,7 @@ export function AffiliateForm() {
                   </FormItem>
                 )}
               />
-              
-              <FormField
-                control={form.control}
-                name="paymentMethod"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Payment Method</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select payment method" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="ACH">ACH</SelectItem>
-                        <SelectItem value="USDC">USDC</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
-            
-            {paymentMethod === "ACH" && (
-              <div className="space-y-4 border p-4 rounded-lg">
-                <h3 className="text-lg font-medium">ACH Payment Details</h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="paymentDetails.achAccount.accountName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Account Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="paymentDetails.achAccount.accountNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Account Number</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="paymentDetails.achAccount.routingNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Routing Number</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            )}
-            
-            {paymentMethod === "USDC" && (
-              <div className="space-y-4 border p-4 rounded-lg">
-                <h3 className="text-lg font-medium">USDC Payment Details</h3>
-                <FormField
-                  control={form.control}
-                  name="paymentDetails.usdcWallet"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>USDC Wallet Address</FormLabel>
-                      <FormControl>
-                        <Input placeholder="0x..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
             
             <div className="flex justify-end space-x-4">
               <Button

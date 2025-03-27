@@ -17,14 +17,26 @@ export interface Affiliate {
   phone?: string;
   promoCode: string;
   commissionRate: number;
-  paymentMethod: "ACH" | "USDC";
+  paymentMethod: "TEST_RAILS";
   paymentDetails: {
-    achAccount?: {
-      accountNumber: string;
-      routingNumber: string;
-      accountName: string;
+    name: string;
+    payeeId: string;
+    contactDetails?: {
+      email: string;
+      phoneNumber?: string;
+      address?: {
+        addressLine1?: string;
+        addressLine2?: string;
+        addressLine3?: string;
+        addressLine4?: string;
+        locality?: string;
+        region?: string;
+        postcode?: string;
+        country?: string;
+      };
+      taxId?: string;
     };
-    usdcWallet?: string;
+    tags?: string[];
   };
   status: "active" | "inactive" | "pending";
   totalEarned: number;
@@ -56,10 +68,12 @@ export interface Payout {
   affiliateId: string;
   amount: number;
   conversions: string[];
-  paymentMethod: "ACH" | "USDC";
+  paymentMethod: "TEST_RAILS";
   paymentDetails: {
-    transactionId?: string;
-    txHash?: string;
+    reference?: string;
+    externalReference?: string;
+    memo?: string;
+    metadata?: Record<string, any>;
   };
   status: "pending" | "processing" | "completed" | "failed";
   processedAt?: string;
