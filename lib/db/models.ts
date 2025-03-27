@@ -1,6 +1,31 @@
 // MongoDB schema definitions using mongoose
 
 import mongoose, { Schema, type Document, type Model } from "mongoose"
+import bcrypt from "mongoose-bcrypt"
+
+// User Schema
+export interface IUserDocument extends Document {
+  name: string
+  email: string
+  password: string
+  role: "admin" // Simplified to just admin role
+  createdAt: Date
+  updatedAt: Date
+  verifyPassword(password: string): Promise<boolean>
+}
+
+const UserSchema = new Schema<IUserDocument>(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true, bcrypt: true },
+    role: { type: String, enum: ["admin"], default: "admin" }, // Changed default and enum
+  },
+  { timestamps: true },
+)
+
+// Add bcrypt plugin for password hashing
+UserSchema.plugin(bcrypt)
 
 // Affiliate Schema
 export interface IAffiliateDocument extends Document {
@@ -212,6 +237,10 @@ const SettingsSchema = new Schema<ISettingsDocument>(
 // Initialize models
 export function getModels() {
   // Check if models are already defined to prevent recompilation in development
+  const User = 
+    (mongoose.models.User as Model<IUserDocument>) ||
+    mongoose.model<IUserDocument>("User", UserSchema)
+
   const Affiliate =
     (mongoose.models.Affiliate as Model<IAffiliateDocument>) ||
     mongoose.model<IAffiliateDocument>("Affiliate", AffiliateSchema)
@@ -227,6 +256,6 @@ export function getModels() {
     (mongoose.models.Settings as Model<ISettingsDocument>) ||
     mongoose.model<ISettingsDocument>("Settings", SettingsSchema)
 
-  return { Affiliate, Conversion, Payout, Settings }
+  return { User, Affiliate, Conversion, Payout, Settings }
 }
 
