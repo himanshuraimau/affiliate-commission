@@ -4,14 +4,10 @@ interface PaymanConfig {
   apiSecret: string;
 }
 
-// Define return types for payment results
-interface ACHPaymentResult {
-  transactionId: string;
-  status: string;
-}
-
-interface USDCPaymentResult {
-  txHash: string;
+// Define return type for payment results
+interface PaymentResult {
+  reference: string;
+  externalReference: string;
   status: string;
 }
 
@@ -24,80 +20,29 @@ export class PaymanService {
     });
   }
   
-  async createACHPayment(affiliate: any, amount: number): Promise<ACHPaymentResult> {
+  async createPayment(affiliate: any, amount: number): Promise<PaymentResult> {
     try {
-      // First create or retrieve a payee
-      const payeeData = {
-        type: "US_ACH",
-        name: affiliate.name,
-        accountHolderName: affiliate.paymentDetails.achAccount.accountName,
-        accountHolderType: "individual", 
-        accountNumber: affiliate.paymentDetails.achAccount.accountNumber,
-        routingNumber: affiliate.paymentDetails.achAccount.routingNumber,
-        accountType: "checking", // Assuming checking account
-        contactDetails: {
-          email: affiliate.email,
-        },
-      };
-      
-      const payee = await this.client.payments.createPayee(payeeData);
-      
-      // Then send the payment
-      const payment = await this.client.payments.sendPayment({
-        amountDecimal: amount,
-        payeeId: payee.id,
-        memo: `Affiliate payout for ${affiliate.name}`,
-      });
-      
-      return {
-        transactionId: payment.id,
-        status: payment.status,
-      };
-    } catch (error: unknown) {
-      console.error('Payman ACH payment error:', error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Payment failed: ${errorMessage}`);
-    }
-  }
-  
-  async createUSDCPayment(affiliate: any, amount: number): Promise<USDCPaymentResult> {
-    try {
-      // For USDC payments, we need wallet address
-      const walletAddress = affiliate.paymentDetails.usdcWallet;
-      
-      if (!walletAddress) {
-        throw new Error('No USDC wallet address provided');
+      // Using the TEST_RAILS payment method as specified in the updated schema
+      if (!affiliate.paymentDetails?.payeeId) {
+        throw new Error('No payee ID provided for payment');
       }
       
-      // Create a crypto payee
-      const payeeData = {
-        type: "CRYPTO",
-        name: affiliate.name,
-        walletAddress: walletAddress,
-        chain: "ethereum", // assuming Ethereum chain for USDC
-        currency: "USDC",
-        contactDetails: {
-          email: affiliate.email,
-        },
-      };
-      
-      const payee = await this.client.payments.createPayee(payeeData);
-      
-      // Send the crypto payment
+      // Send the payment using the payee ID
       const payment = await this.client.payments.sendPayment({
         amountDecimal: amount,
-        payeeId: payee.id,
-        memo: `Affiliate payout for ${affiliate.name}`,
+        payeeId: affiliate.paymentDetails.payeeId,
+        memo: `Affiliate payout for ${affiliate.paymentDetails.name || affiliate.name}`,
       });
       
       return {
-        txHash: payment.transactionHash,
-        status: payment.status,
+        reference: payment.reference,
+        externalReference: payment.externalReference,
+        status: payment.status
       };
     } catch (error: unknown) {
-      console.error('Payman USDC payment error:', error);
+      console.error('Payman payment error:', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Crypto payment failed: ${errorMessage}`);
+      throw new Error(`Payment failed: ${errorMessage}`);
     }
   }
 }
