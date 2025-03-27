@@ -4,11 +4,13 @@ declare global {
   var mongoose: { conn: any; promise: any } | undefined
 }
 
-const MONGODB_URI = process.env.MONGODB_URI || ""
+const MONGODB_URI = process.env.MONGODB_URI
 
 if (!MONGODB_URI) {
   throw new Error("Please define the MONGODB_URI environment variable inside .env.local")
 }
+
+console.log("MongoDB URI available:", !!MONGODB_URI)
 
 // Define interface for cached type
 interface MongooseCache {
@@ -34,7 +36,8 @@ export async function connectDB() {
       bufferCommands: false,
     }
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+    cached.promise = mongoose.connect(MONGODB_URI as string, opts).then((mongoose) => {
+      console.log("MongoDB connection established")
       return mongoose
     })
   }
@@ -43,6 +46,7 @@ export async function connectDB() {
     cached.conn = await cached.promise
   } catch (e) {
     cached.promise = null
+    console.error("MongoDB connection error:", e)
     throw e
   }
 

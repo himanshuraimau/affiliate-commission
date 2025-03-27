@@ -2,6 +2,7 @@ import type React from "react"
 import { AffiliateDashboardSidebar } from "@/components/affiliates/affiliate-dashboard-sidebar"
 import { Inter } from "next/font/google"
 import { Providers } from "@/lib/providers"
+import { AuthProvider } from "@/lib/auth-context"
 import "./globals.css"
 import type { Metadata } from "next"
 
@@ -22,7 +23,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </Providers>
       </body>
     </html>

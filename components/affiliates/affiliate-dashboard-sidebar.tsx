@@ -1,8 +1,8 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
-import { BarChart3, Users, ShoppingCart, CreditCard, Settings, Home } from "lucide-react"
+import { BarChart3, Users, ShoppingCart, CreditCard, Settings, Home, LogOut } from "lucide-react"
 
 import {
   Sidebar,
@@ -14,9 +14,11 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
 
 export function AffiliateDashboardSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
 
   const routes = [
     {
@@ -50,6 +52,24 @@ export function AffiliateDashboardSidebar() {
       icon: Settings,
     },
   ]
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      
+      if (response.ok) {
+        router.push("/login")
+        router.refresh()
+      }
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
+  }
 
   return (
     <Sidebar>
@@ -87,7 +107,18 @@ export function AffiliateDashboardSidebar() {
               <span className="text-xs text-muted-foreground">admin@example.com</span>
             </div>
           </div>
-          <SidebarTrigger />
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleLogout}
+              title="Logout"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <LogOut size={18} />
+            </Button>
+            <SidebarTrigger />
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>

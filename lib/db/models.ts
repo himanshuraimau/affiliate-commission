@@ -1,31 +1,31 @@
 // MongoDB schema definitions using mongoose
 
 import mongoose, { Schema, type Document, type Model } from "mongoose"
-import bcrypt from "mongoose-bcrypt"
 
 // User Schema
 export interface IUserDocument extends Document {
+  _id: mongoose.Types.ObjectId;
   name: string
   email: string
   password: string
-  role: "admin" // Simplified to just admin role
   createdAt: Date
   updatedAt: Date
-  verifyPassword(password: string): Promise<boolean>
+  verifyPassword(password: string): boolean
 }
 
 const UserSchema = new Schema<IUserDocument>(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true, bcrypt: true },
-    role: { type: String, enum: ["admin"], default: "admin" }, // Changed default and enum
+    password: { type: String, required: true },
   },
   { timestamps: true },
 )
 
-// Add bcrypt plugin for password hashing
-UserSchema.plugin(bcrypt)
+// Simple password verification without hashing
+UserSchema.methods.verifyPassword = function(candidatePassword: string): boolean {
+  return this.password === candidatePassword;
+};
 
 // Affiliate Schema
 export interface IAffiliateDocument extends Document {
