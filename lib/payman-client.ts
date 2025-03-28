@@ -6,7 +6,7 @@ export class PaymanClient {
 
   constructor() {
     // Fix the typo: PAYMANT_API_KEY -> PAYMAN_API_KEY
-    this.apiKey = process.env.PAYMAN_API_KEY || '';
+    this.apiKey = process.env.PAYMANT_API_KEY || '';
     this.baseUrl = process.env.PAYMAN_API_URL || 'https://agent.payman.ai/api';
     
     if (!this.apiKey) {

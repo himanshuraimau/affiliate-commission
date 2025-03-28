@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { getModels } from "@/lib/db/models";
+import { NextRequest } from "next/server";
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest) {
   try {
-    const { id } = params;
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
     const { status } = await request.json();
 
     if (!id || !status) {
