@@ -5,22 +5,18 @@ const nextConfig = {
       // Prevent server-side native module errors
       config.externals.push('mongoose');
     }
-
     // Simpler fallbacks
     config.resolve.fallback = {
       fs: false,
       net: false,
       tls: false,
     };
-
     return config;
   },
   
-  // Remove the deprecated experimental option
+  // Updated for Next.js 15.1.0 compatibility
   experimental: {
-    // serverExternalPackages has been removed in Next.js 15
-    // using webpack externals configuration instead (above)
+    // Empty experimental section - serverExternalPackages removed
   }
 };
-
 module.exports = nextConfig;
