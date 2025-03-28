@@ -5,9 +5,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatCurrency } from "@/lib/utils"
 import { useDashboardStats } from "@/lib/api/hooks"
+import { useEffect } from "react"
 
 export function DashboardCards() {
-  const { data: stats, isLoading, error } = useDashboardStats()
+  const { data: stats, isLoading, error, refetch } = useDashboardStats()
+  
+  // Debug logging to diagnose API response issues
+  useEffect(() => {
+    if (stats) {
+      console.log("Dashboard stats received:", stats)
+    }
+    if (error) {
+      console.error("Dashboard stats error:", error)
+    }
+  }, [stats, error])
+
+  // Add an auto-retry for better data loading reliability
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        console.log("Retrying dashboard stats fetch...")
+        refetch()
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [error, refetch])
   
   if (isLoading) {
     return (
@@ -45,6 +67,18 @@ export function DashboardCards() {
     )
   }
 
+  // Safely access nested properties with fallbacks to zero
+  const safeData = {
+    totalAffiliates: stats?.totalAffiliates || 0,
+    activeAffiliates: stats?.activeAffiliates || 0,
+    totalConversions: stats?.totalConversions || 0,
+    pendingConversions: stats?.pendingConversions || 0,
+    totalRevenue: typeof stats?.totalRevenue === 'number' ? stats.totalRevenue : 0,
+    totalCommissions: typeof stats?.totalCommissions === 'number' ? stats.totalCommissions : 0,
+    pendingPayouts: typeof stats?.pendingPayouts === 'number' ? stats.pendingPayouts : 0,
+    conversionRate: typeof stats?.conversionRate === 'number' ? stats.conversionRate : 0,
+  }
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
@@ -53,8 +87,8 @@ export function DashboardCards() {
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.totalAffiliates}</div>
-          <p className="text-xs text-muted-foreground">{stats.activeAffiliates} active affiliates</p>
+          <div className="text-2xl font-bold">{safeData.totalAffiliates}</div>
+          <p className="text-xs text-muted-foreground">{safeData.activeAffiliates} active affiliates</p>
         </CardContent>
       </Card>
       <Card>
@@ -63,8 +97,8 @@ export function DashboardCards() {
           <ShoppingCart className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.totalConversions}</div>
-          <p className="text-xs text-muted-foreground">{stats.pendingConversions} pending approval</p>
+          <div className="text-2xl font-bold">{safeData.totalConversions}</div>
+          <p className="text-xs text-muted-foreground">{safeData.pendingConversions} pending approval</p>
         </CardContent>
       </Card>
       <Card>
@@ -73,8 +107,8 @@ export function DashboardCards() {
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-          <p className="text-xs text-muted-foreground">{formatCurrency(stats.totalCommissions)} in commissions</p>
+          <div className="text-2xl font-bold">{formatCurrency(safeData.totalRevenue)}</div>
+          <p className="text-xs text-muted-foreground">{formatCurrency(safeData.totalCommissions)} in commissions</p>
         </CardContent>
       </Card>
       <Card>
@@ -83,8 +117,10 @@ export function DashboardCards() {
           <CreditCard className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(stats.pendingPayouts)}</div>
-          <p className="text-xs text-muted-foreground">{stats.conversionRate.toFixed(1)}% conversion rate</p>
+          <div className="text-2xl font-bold">{formatCurrency(safeData.pendingPayouts)}</div>
+          <p className="text-xs text-muted-foreground">
+            {safeData.conversionRate.toFixed(1)}% conversion rate
+          </p>
         </CardContent>
       </Card>
     </div>

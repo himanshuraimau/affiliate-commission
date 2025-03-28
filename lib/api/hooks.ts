@@ -14,6 +14,9 @@ import {
   type Settings
 } from './client'
 
+// Define API_BASE constant to match the one in client.ts
+const API_BASE = '/api';
+
 // Affiliates Hooks
 export function useAffiliatesList(status?: string) {
   return useQuery({
@@ -166,7 +169,39 @@ export function useUpdateSettings() {
 export function useDashboardStats(dateFrom?: string, dateTo?: string) {
   return useQuery({
     queryKey: ['stats', 'dashboard', { dateFrom, dateTo }],
-    queryFn: () => statsApi.getDashboardStats(dateFrom, dateTo),
+    queryFn: async () => {
+      try {
+        const url = new URL(`${API_BASE}/stats/dashboard`, window.location.origin);
+        
+        if (dateFrom) {
+          url.searchParams.append('dateFrom', dateFrom);
+        }
+        
+        if (dateTo) {
+          url.searchParams.append('dateTo', dateTo);
+        }
+        
+        console.log(`Fetching dashboard stats from: ${url.toString()}`);
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Failed to fetch dashboard stats: ${response.status} ${errorData.error || ''}`);
+        }
+        
+        const responseData = await response.json();
+        console.log("Dashboard stats API response:", responseData);
+        
+        // Extract the data property if it exists (this is the key fix)
+        const actualData = responseData.data || responseData;
+        return actualData;
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        throw error;
+      }
+    },
+    staleTime: 30000, // 30 seconds
+    retry: 2,
   })
 }
 
