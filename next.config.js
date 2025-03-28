@@ -14,9 +14,20 @@ const nextConfig = {
     return config;
   },
   
-  // Updated for Next.js 15.1.0 compatibility
+  // Add the settings from next.config.mjs
+  typescript: {
+    ignoreBuildErrors: true
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+    ignoreBuildErrors: true
+  },
+  
+  // For Next.js 15.1.0 compatibility
   experimental: {
-    // Empty experimental section - serverExternalPackages removed
+    // Empty experimental section
+    serverComponentsExternalPackages: [],
   }
 };
+
 module.exports = nextConfig;

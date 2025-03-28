@@ -28,10 +28,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Try from localStorage first
-        const storedUser = localStorage.getItem("user");
+        // Safe access to localStorage with try-catch to handle SSR
+        let storedUser = null;
+        try {
+          const storedUserString = typeof window !== 'undefined' ? 
+            localStorage.getItem("user") : null;
+          if (storedUserString) {
+            storedUser = JSON.parse(storedUserString);
+          }
+        } catch (e) {
+          console.error("localStorage error:", e);
+        }
+
         if (storedUser) {
-          setUser(JSON.parse(storedUser));
+          setUser(storedUser);
           setIsLoading(false);
           return;
         }
@@ -42,7 +52,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (res.ok && data.user) {
           setUser(data.user);
-          localStorage.setItem("user", JSON.stringify(data.user));
+          try {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem("user", JSON.stringify(data.user));
+            }
+          } catch (e) {
+            console.error("localStorage error:", e);
+          }
         }
       } catch (e) {
         console.error("Auth check failed:", e);
@@ -50,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     };
-
+    
     checkAuth();
   }, []);
 
@@ -72,7 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Use the user data directly from the response
       if (data.user) {
         setUser(data.user);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem("user", JSON.stringify(data.user));
+          }
+        } catch (e) {
+          console.error("localStorage error:", e);
+        }
         router.push("/");
       }
     } finally {
@@ -98,7 +120,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Use the user data directly from the response
       if (data.user) {
         setUser(data.user);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem("user", JSON.stringify(data.user));
+          }
+        } catch (e) {
+          console.error("localStorage error:", e);
+        }
         router.push("/");
       }
     } finally {
@@ -111,7 +139,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
       setUser(null);
-      localStorage.removeItem("user");
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem("user");
+        }
+      } catch (e) {
+        console.error("localStorage error:", e);
+      }
       router.push("/login");
     } finally {
       setIsLoading(false);
