@@ -16,9 +16,10 @@ const nextConfig = {
     return config;
   },
   
-  // Use the correct property name for external packages
+  // Remove the deprecated experimental option
   experimental: {
-    serverExternalPackages: ['mongoose']
+    // serverExternalPackages has been removed in Next.js 15
+    // using webpack externals configuration instead (above)
   }
 };
 
