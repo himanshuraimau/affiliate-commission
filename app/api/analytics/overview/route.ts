@@ -1,11 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db/connect"
+import { connectDB } from "@/lib/db/connect"
 import { getModels } from "@/lib/db/models"
 import { subDays, isAfter, isBefore, parseISO } from "date-fns"
 
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase()
+    await connectDB()
     const { Affiliate, Conversion, Payout } = getModels()
 
     const searchParams = request.nextUrl.searchParams

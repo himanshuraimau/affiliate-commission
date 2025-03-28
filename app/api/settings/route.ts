@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db/connect"
+import { connectDB } from "@/lib/db/connect"
 import { getModels } from "@/lib/db/models"
 
 export async function GET() {
   try {
-    await connectToDatabase()
+    await connectDB()
     const { Settings } = getModels()
 
     // Get settings - always return the first document
@@ -36,7 +36,7 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    await connectToDatabase()
+    await connectDB()
     const { Settings } = getModels()
     
     const data = await request.json()

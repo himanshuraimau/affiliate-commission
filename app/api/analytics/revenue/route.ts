@@ -1,10 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db/connect"
+import { connectDB } from "@/lib/db/connect"
 import { getModels } from "@/lib/db/models"
+import { connect } from "http2"
 
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase()
+    await connectDB()
     const { Conversion } = getModels()
 
     const searchParams = request.nextUrl.searchParams

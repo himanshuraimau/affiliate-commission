@@ -1,12 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db/connect"
+import { connectDB } from "@/lib/db/connect"
 import { getModels } from "@/lib/db/models"
 import { parseISO, subDays } from "date-fns"
 import mongoose from "mongoose"
 
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase()
+    await connectDB()
     const { Affiliate, Conversion } = getModels()
 
     const searchParams = request.nextUrl.searchParams
