@@ -1,22 +1,13 @@
 import axios from 'axios';
+import { 
+  PaymanPaymentResponse, 
+  PaymanErrorResponse,
+  SendPaymentParams,
+  CreatePayeeParams
+} from '@/types/payment';
 
 // Base URL for Payman API
 const PAYMAN_API_BASE_URL = 'https://agent.payman.ai/api';
-
-// Types for Payman API responses
-export interface PaymanPaymentResponse {
-  reference: string;
-  externalReference: string;
-  status: string;
-}
-
-export interface PaymanErrorResponse {
-  error: string;
-  errorCode?: string;
-  errorMessage?: string;
-  message?: string;
-  details?: any;
-}
 
 export class PaymanClient {
   private apiKey: string;
@@ -28,13 +19,7 @@ export class PaymanClient {
   /**
    * Send a payment using the Payman API
    */
-  async sendPayment(params: {
-    name?: string;
-    amountDecimal: number;
-    payeeId: string;
-    payeeName?: string;
-    memo: string;
-  }): Promise<PaymanPaymentResponse> {
+  async sendPayment(params: SendPaymentParams): Promise<PaymanPaymentResponse> {
     try {
       const response = await axios({
         method: 'POST',
@@ -68,12 +53,7 @@ export class PaymanClient {
   /**
    * Create a test payee in the Payman system
    */
-  async createTestPayee(params: {
-    name: string;
-    email?: string;
-    tags?: string[];
-    contactDetails?: any;
-  }): Promise<any> {
+  async createTestPayee(params: CreatePayeeParams): Promise<any> {
     try {
       const response = await axios({
         method: 'POST',
@@ -86,7 +66,10 @@ export class PaymanClient {
           type: "TEST_RAILS",
           name: params.name,
           tags: params.tags || [],
-          contactDetails: params.contactDetails || {}
+          contactDetails: {
+            email: params.email,
+            phoneNumber: params.phoneNumber
+          }
         }
       });
       

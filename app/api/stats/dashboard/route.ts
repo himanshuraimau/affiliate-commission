@@ -1,6 +1,8 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { type NextRequest } from "next/server"
 import { connectDB } from "@/lib/db/connect"
 import { getModels } from "@/lib/db/models"
+import { createSuccessResponse, createErrorResponse, buildDateQuery } from "@/lib/api/utils"
+import { DashboardStats } from "@/types"
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,19 +14,7 @@ export async function GET(request: NextRequest) {
     const dateTo = searchParams.get("dateTo")
 
     // Build date query for filtered stats
-    const dateQuery: any = {}
-    
-    if (dateFrom || dateTo) {
-      dateQuery.createdAt = {}
-      
-      if (dateFrom) {
-        dateQuery.createdAt.$gte = new Date(dateFrom)
-      }
-      
-      if (dateTo) {
-        dateQuery.createdAt.$lte = new Date(dateTo)
-      }
-    }
+    const dateQuery = buildDateQuery(dateFrom, dateTo);
 
     // Fetch aggregate data
     const [
@@ -50,10 +40,9 @@ export async function GET(request: NextRequest) {
     const totalCommissions = filteredConversions.reduce((sum, c) => sum + c.commissionAmount, 0)
     
     // Calculate conversion rate (% of orders that used a promo code)
-    // In a real app, this would compare against total orders, but for this app we use a placeholder
     const conversionRate = totalRevenue > 0 ? (totalCommissions / totalRevenue) * 100 : 0
 
-    const stats = {
+    const stats: DashboardStats = {
       totalAffiliates,
       activeAffiliates,
       totalConversions: filteredConversions.length,
@@ -64,9 +53,9 @@ export async function GET(request: NextRequest) {
       conversionRate
     }
 
-    return NextResponse.json(stats)
+    return createSuccessResponse(stats);
   } catch (error) {
     console.error("Error fetching dashboard stats:", error)
-    return NextResponse.json({ error: "Failed to fetch dashboard stats" }, { status: 500 })
+    return createErrorResponse("Failed to fetch dashboard stats");
   }
 }

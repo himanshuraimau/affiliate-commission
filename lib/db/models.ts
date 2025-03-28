@@ -1,18 +1,15 @@
 // MongoDB schema definitions using mongoose
 
-import mongoose, { Schema, type Document, type Model } from "mongoose"
+import mongoose, { Schema, Model } from "mongoose"
+import { 
+  IUserDocument, 
+  IAffiliateDocument, 
+  IConversionDocument, 
+  IPayoutDocument, 
+  ISettingsDocument 
+} from "@/types/db-models"
 
 // User Schema
-export interface IUserDocument extends Document {
-  _id: mongoose.Types.ObjectId;
-  name: string
-  email: string
-  password: string
-  createdAt: Date
-  updatedAt: Date
-  verifyPassword(password: string): boolean
-}
-
 const UserSchema = new Schema<IUserDocument>(
   {
     name: { type: String, required: true },
@@ -28,41 +25,6 @@ UserSchema.methods.verifyPassword = function(candidatePassword: string): boolean
 };
 
 // Affiliate Schema
-export interface IAffiliateDocument extends Document {
-  name: string
-  email: string
-  phone?: string
-  promoCode: string
-  commissionRate: number
-  paymentMethod: "TEST_RAILS"
-  paymentDetails: {
-    name: string,
-    payeeId?: string
-    contactDetails?: {
-      email?: string
-      phoneNumber?: string
-      address?: {
-        addressLine1?: string
-        addressLine2?: string
-        addressLine3?: string
-        addressLine4?: string
-        locality?: string
-        region?: string
-        postcode?: string
-        country?: string
-      }
-      taxId?: string
-    }
-    tags?: string[]
-  }
-  status: "active" | "inactive" | "pending"
-  totalEarned: number
-  totalPaid: number
-  pendingAmount: number
-  createdAt: Date
-  updatedAt: Date
-}
-
 const AffiliateSchema = new Schema<IAffiliateDocument>(
   {
     name: { type: String, required: true },
@@ -104,22 +66,6 @@ const AffiliateSchema = new Schema<IAffiliateDocument>(
 )
 
 // Conversion Schema
-export interface IConversionDocument extends Document {
-  affiliateId: mongoose.Types.ObjectId
-  orderId: string
-  orderAmount: number
-  commissionAmount: number
-  promoCode: string
-  customer: {
-    email: string
-    name?: string
-  }
-  status: "pending" | "approved" | "rejected" | "paid"
-  payoutId?: mongoose.Types.ObjectId
-  createdAt: Date
-  updatedAt: Date
-}
-
 const ConversionSchema = new Schema<IConversionDocument>(
   {
     affiliateId: {
@@ -146,24 +92,6 @@ const ConversionSchema = new Schema<IConversionDocument>(
 )
 
 // Payout Schema
-export interface IPayoutDocument extends Document {
-  affiliateId: mongoose.Types.ObjectId
-  amount: number
-  conversions: mongoose.Types.ObjectId[]
-  paymentMethod: "TEST_RAILS"
-  paymentDetails: {
-    reference?: string
-    externalReference?: string
-    memo?: string
-    walletId?: string
-    metadata?: Record<string, any>
-  }
-  status: "pending" | "processing" | "completed" | "failed"
-  processedAt?: Date
-  createdAt: Date
-  updatedAt: Date
-}
-
 const PayoutSchema = new Schema<IPayoutDocument>(
   {
     affiliateId: {
@@ -192,24 +120,6 @@ const PayoutSchema = new Schema<IPayoutDocument>(
 )
 
 // Settings Schema
-export interface ISettingsDocument extends Document {
-  payoutSettings: {
-    minimumPayoutAmount: number
-    payoutFrequency: "daily" | "weekly" | "monthly"
-    payoutDay?: number // Day of week (0-6) or day of month (1-31)
-    automaticPayouts: boolean
-  }
-  apiKeys: {
-    paymanApiKey?: string
-    otherApiKeys?: Record<string, string>
-  }
-  commissionDefaults: {
-    defaultRate: number
-    minimumOrderAmount: number
-  }
-  updatedAt: Date
-}
-
 const SettingsSchema = new Schema<ISettingsDocument>(
   {
     payoutSettings: {
@@ -250,7 +160,8 @@ export function getModels() {
     mongoose.model<IConversionDocument>("Conversion", ConversionSchema)
 
   const Payout =
-    (mongoose.models.Payout as Model<IPayoutDocument>) || mongoose.model<IPayoutDocument>("Payout", PayoutSchema)
+    (mongoose.models.Payout as Model<IPayoutDocument>) || 
+    mongoose.model<IPayoutDocument>("Payout", PayoutSchema)
 
   const Settings =
     (mongoose.models.Settings as Model<ISettingsDocument>) ||

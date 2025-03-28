@@ -1,12 +1,14 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { type NextRequest } from "next/server"
 import { connectDB } from "@/lib/db/connect"
 import { getModels } from "@/lib/db/models"
-import { subDays, isAfter, isBefore, parseISO } from "date-fns"
+import { subDays, parseISO } from "date-fns"
+import { createSuccessResponse, createErrorResponse } from "@/lib/api/utils"
+import { AnalyticsOverviewData } from "@/types"
 
 export async function GET(request: NextRequest) {
   try {
     await connectDB()
-    const { Affiliate, Conversion, Payout } = getModels()
+    const { Affiliate, Conversion } = getModels()
 
     const searchParams = request.nextUrl.searchParams
     const fromDate = searchParams.get("from")
@@ -79,7 +81,7 @@ export async function GET(request: NextRequest) {
       ? ((activeAffiliates - prevActiveAffiliates) / prevActiveAffiliates) * 100 
       : 100
 
-    return NextResponse.json({
+    const overview: AnalyticsOverviewData = {
       totalRevenue,
       revenueGrowth,
       conversionRate,
@@ -88,12 +90,11 @@ export async function GET(request: NextRequest) {
       affiliatesGrowth,
       averageCommission,
       averageCommissionChange,
-    })
+    }
+
+    return createSuccessResponse(overview);
   } catch (error) {
     console.error("Error fetching analytics overview:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch analytics overview" }, 
-      { status: 500 }
-    )
+    return createErrorResponse("Failed to fetch analytics overview");
   }
 }
