@@ -4,8 +4,9 @@ const nextConfig = {
     ignoreDuringBuilds: true
   },
   experimental: {
-    serverActions: true,
-    serverExternalPackages: ['mongoose']
+    serverActions: {
+      enabled: true
+    }
   }
 }
 
