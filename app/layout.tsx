@@ -1,5 +1,4 @@
 import type React from "react"
-import { AffiliateDashboardSidebar } from "@/components/affiliates/affiliate-dashboard-sidebar"
 import { Inter } from "next/font/google"
 import { Providers } from "@/lib/providers"
 import { AuthProvider } from "@/lib/auth-context"
