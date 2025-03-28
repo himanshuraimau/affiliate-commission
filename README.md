@@ -76,6 +76,13 @@ pnpm run dev
 
 The application will be available at `http://localhost:3000`.
 
+## 🧪 Testing the Application
+
+Use the following credentials to test the application:
+
+- **Email**: admin@example.com
+- **Password**: password123
+
 ## 📚 Documentation
 
 ### API Documentation
