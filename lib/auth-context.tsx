@@ -24,11 +24,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Check if user is already logged in on initial load
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Safe access to localStorage with try-catch to handle SSR
+        // First check localStorage
         let storedUser = null;
         try {
           const storedUserString = typeof window !== 'undefined' ? 
@@ -40,35 +39,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error("localStorage error:", e);
         }
 
-        if (storedUser) {
-          setUser(storedUser);
-          setIsLoading(false);
+        // Validate stored user with server
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) {
+          // Clear invalid session
+          setUser(null);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem("user");
+          }
+          router.push("/login");
           return;
         }
-        
-        // If not in localStorage, check with the server
-        const res = await fetch("/api/auth/me");
+
         const data = await res.json();
-        
-        if (res.ok && data.user) {
+        if (data.user) {
           setUser(data.user);
-          try {
-            if (typeof window !== 'undefined') {
-              localStorage.setItem("user", JSON.stringify(data.user));
-            }
-          } catch (e) {
-            console.error("localStorage error:", e);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem("user", JSON.stringify(data.user));
           }
+        } else {
+          setUser(null);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem("user");
+          }
+          router.push("/login");
         }
       } catch (e) {
         console.error("Auth check failed:", e);
+        setUser(null);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem("user");
+        }
+        router.push("/login");
       } finally {
         setIsLoading(false);
       }
     };
     
     checkAuth();
-  }, []);
+  }, [router]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);

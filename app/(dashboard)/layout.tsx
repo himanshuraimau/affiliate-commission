@@ -1,17 +1,38 @@
-import { redirect } from 'next/navigation'
+"use client";
+import { useEffect } from "react"
+import { useRouter, usePathname } from "next/navigation"
 import { AffiliateDashboardSidebar } from "@/components/affiliates/affiliate-dashboard-sidebar"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { useAuth } from "@/lib/auth-context"
+import { FullPageLoader } from "@/components/ui/loading"
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session) {
-    redirect('/login')
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    // Protect all dashboard routes
+    if (!isLoading) {
+      if (!user) {
+        router.replace("/login")
+      } else if (pathname === "/login" || pathname === "/signup") {
+        router.replace("/dashboard")
+      }
+    }
+  }, [user, isLoading, router, pathname])
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return <FullPageLoader />
+  }
+
+  // Don't render anything if not authenticated
+  if (!user) {
+    return null
   }
 
   return (
