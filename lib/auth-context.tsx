@@ -104,7 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (e) {
           console.error("localStorage error:", e);
         }
-        router.push("/");
+        console.log("Login successful, redirecting to dashboard");
+        router.push("/dashboard"); // Change redirect to /dashboard instead of /
       }
     } finally {
       setIsLoading(false);
@@ -136,7 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (e) {
           console.error("localStorage error:", e);
         }
-        router.push("/");
+        console.log("Signup successful, redirecting to dashboard");
+        router.push("/dashboard"); // Change redirect to /dashboard instead of /
       }
     } finally {
       setIsLoading(false);
