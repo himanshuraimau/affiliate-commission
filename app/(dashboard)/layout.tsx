@@ -15,20 +15,12 @@ export default function DashboardLayout({
   const pathname = usePathname()
 
   useEffect(() => {
-    // Add debugging to see auth state changes
-    console.log("Auth state updated:", { user, isLoading, pathname })
-    
+    // Only perform client-side redirects after auth check is complete
     if (!isLoading) {
       // Redirect unauthenticated users away from dashboard
       if (!user && pathname.startsWith("/dashboard")) {
         console.log("No user detected, redirecting to login")
         router.replace("/login")
-      }
-      
-      // Redirect authenticated users to dashboard if they're on login/signup pages
-      if (user && (pathname === "/login" || pathname === "/signup")) {
-        console.log("User detected on auth page, redirecting to dashboard")
-        router.replace("/dashboard")
       }
     }
   }, [user, isLoading, router, pathname])

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { setCookie, removeCookie } from './cookies';
 
 type User = {
   id: string;
@@ -46,8 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           if (typeof window !== 'undefined') {
             localStorage.removeItem("user");
+            removeCookie('user');
           }
-          router.push("/login");
+          // Remove automatic redirect for public pages
           return;
         }
 
@@ -56,21 +58,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(data.user);
           if (typeof window !== 'undefined') {
             localStorage.setItem("user", JSON.stringify(data.user));
+            setCookie('user', data.user);
           }
         } else {
           setUser(null);
           if (typeof window !== 'undefined') {
             localStorage.removeItem("user");
+            removeCookie('user');
           }
-          router.push("/login");
+          // Remove automatic redirect for public pages
         }
       } catch (e) {
         console.error("Auth check failed:", e);
         setUser(null);
         if (typeof window !== 'undefined') {
           localStorage.removeItem("user");
+          removeCookie('user');
         }
-        router.push("/login");
+        // Remove automatic redirect for public pages
       } finally {
         setIsLoading(false);
       }
@@ -100,12 +105,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           if (typeof window !== 'undefined') {
             localStorage.setItem("user", JSON.stringify(data.user));
+            // Add cookie for middleware
+            setCookie('user', data.user);
           }
         } catch (e) {
           console.error("localStorage error:", e);
         }
         console.log("Login successful, redirecting to dashboard");
-        router.push("/dashboard"); // Change redirect to /dashboard instead of /
+        router.push("/dashboard");
       }
     } finally {
       setIsLoading(false);
@@ -133,12 +140,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           if (typeof window !== 'undefined') {
             localStorage.setItem("user", JSON.stringify(data.user));
+            // Add cookie for middleware
+            setCookie('user', data.user);
           }
         } catch (e) {
           console.error("localStorage error:", e);
         }
         console.log("Signup successful, redirecting to dashboard");
-        router.push("/dashboard"); // Change redirect to /dashboard instead of /
+        router.push("/dashboard");
       }
     } finally {
       setIsLoading(false);
@@ -153,6 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         if (typeof window !== 'undefined') {
           localStorage.removeItem("user");
+          // Remove cookie for middleware
+          removeCookie('user');
         }
       } catch (e) {
         console.error("localStorage error:", e);
