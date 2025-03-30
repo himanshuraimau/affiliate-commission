@@ -9,8 +9,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Affiliate Commission System",
-  description: "Manage affiliate commissions and payouts",
-  generator: 'v0.dev'
+  description: "Manage affiliate commissions and payouts"
 }
 
 export default function RootLayout({
