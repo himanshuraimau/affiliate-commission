@@ -23,7 +23,7 @@ export function AffiliateDashboardSidebar() {
   const routes = [
     {
       title: "Dashboard",
-      href: "/",
+      href: "/dashboard",
       icon: Home,
     },
     {
