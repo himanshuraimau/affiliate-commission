@@ -15,11 +15,11 @@ export default function DashboardLayout({
   const pathname = usePathname()
 
   useEffect(() => {
-    // Protect all dashboard routes
+    // Protect only dashboard routes, not public routes
     if (!isLoading) {
-      if (!user) {
+      if (!user && pathname.startsWith("/dashboard")) {
         router.replace("/login")
-      } else if (pathname === "/login" || pathname === "/signup") {
+      } else if (user && (pathname === "/login" || pathname === "/signup")) {
         router.replace("/dashboard")
       }
     }
@@ -30,8 +30,8 @@ export default function DashboardLayout({
     return <FullPageLoader />
   }
 
-  // Don't render anything if not authenticated
-  if (!user) {
+  // Don't render anything if not authenticated and trying to access dashboard
+  if (!user && pathname.startsWith("/dashboard")) {
     return null
   }
 
