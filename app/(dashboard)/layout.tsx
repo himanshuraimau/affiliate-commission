@@ -15,9 +15,16 @@ export default function DashboardLayout({
   const pathname = usePathname()
 
   useEffect(() => {
-    // Simple redirect for unauthenticated users
-    if (!isLoading && !user && pathname.startsWith("/dashboard")) {
-      router.replace("/login")
+    if (!isLoading) {
+      // Redirect unauthenticated users away from dashboard
+      if (!user && pathname.startsWith("/dashboard")) {
+        router.replace("/login")
+      }
+      
+      // Redirect authenticated users to dashboard if they're on login/signup pages
+      if (user && (pathname === "/login" || pathname === "/signup")) {
+        router.replace("/dashboard")
+      }
     }
   }, [user, isLoading, router, pathname])
 
