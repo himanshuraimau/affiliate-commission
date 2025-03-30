@@ -15,7 +15,7 @@ A comprehensive platform for managing affiliate partnerships, tracking conversio
 ## 🚀 Tech Stack
 
 ### Frontend
-- **Framework**: Next.js 14 with App Router
+- **Framework**: Next.js 15 with App Router
 - **UI Components**: Custom components built with Tailwind CSS and shadcn/ui
 - **State Management**: React Query for server state
 - **Forms**: React Hook Form with Zod validation
