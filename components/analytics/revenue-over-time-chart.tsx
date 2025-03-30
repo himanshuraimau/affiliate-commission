@@ -6,8 +6,6 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -22,12 +20,12 @@ export function RevenueOverTimeChart() {
   
   if (isLoading) {
     return (
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-72" />
         </CardHeader>
-        <CardContent className="h-80">
+        <CardContent className="h-[400px]"> {/* Increased height */}
           <Skeleton className="h-full w-full" />
         </CardContent>
       </Card>
@@ -49,7 +47,7 @@ export function RevenueOverTimeChart() {
   }
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Revenue Over Time</CardTitle>
         <CardDescription>
@@ -57,14 +55,15 @@ export function RevenueOverTimeChart() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
+        {/* Increased height */}
+        <ResponsiveContainer width="100%" height={400}> 
           <AreaChart
             data={data}
             margin={{
               top: 10,
               right: 30,
-              left: 0,
-              bottom: 0,
+              left: 10, /* Adjusted left margin */
+              bottom: 10, /* Added bottom margin */
             }}
           >
             <defs>

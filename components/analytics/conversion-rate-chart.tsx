@@ -32,12 +32,12 @@ export function ConversionRateChart() {
   
   if (isLoading) {
     return (
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-72" />
         </CardHeader>
-        <CardContent className="h-80">
+        <CardContent className="h-[400px]"> {/* Increased height */}
           <Skeleton className="h-full w-full" />
         </CardContent>
       </Card>
@@ -73,7 +73,7 @@ export function ConversionRateChart() {
   }
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Conversion Rate</CardTitle>
         <CardDescription>
@@ -81,14 +81,15 @@ export function ConversionRateChart() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
+      
+        <ResponsiveContainer width="105%" height={400}> 
           <LineChart
             data={chartData}
             margin={{
               top: 5,
-              right: 10,
-              left: 10,
-              bottom: 0,
+              right: 20,
+              left: 20,
+              bottom: 10,
             }}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />

@@ -33,12 +33,12 @@ export function TopAffiliatesChart() {
   
   if (isLoading) {
     return (
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-72" />
         </CardHeader>
-        <CardContent className="h-80">
+        <CardContent className="h-[400px]"> {/* Increased height */}
           <Skeleton className="h-full w-full" />
         </CardContent>
       </Card>
@@ -74,7 +74,7 @@ export function TopAffiliatesChart() {
   }
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Top Affiliates</CardTitle>
         <CardDescription>
@@ -82,7 +82,8 @@ export function TopAffiliatesChart() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
+        {/* Increased height */}
+        <ResponsiveContainer width="100%" height={400}> 
           <BarChart
             data={chartData}
             layout="vertical"
@@ -102,7 +103,7 @@ export function TopAffiliatesChart() {
               type="category" 
               dataKey="name" 
               tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
-              width={100}
+              width={120} /* Increased width for labels */
             />
             <Tooltip 
               formatter={(value: number) => formatCurrency(value)}
