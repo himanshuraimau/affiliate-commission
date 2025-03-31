@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
 import { BarChart3, Users, ShoppingCart, CreditCard, Settings, Home, LogOut } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 
 import {
   Sidebar,
@@ -19,6 +20,7 @@ import { Button } from "@/components/ui/button"
 export function AffiliateDashboardSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { user, logout } = useAuth()
 
   const routes = [
     {
@@ -55,17 +57,9 @@ export function AffiliateDashboardSidebar() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-      
-      if (response.ok) {
-        router.push("/login")
-        router.refresh()
-      }
+      await logout()
+      router.push("/login")
+      router.refresh()
     } catch (error) {
       console.error("Logout failed:", error)
     }
@@ -103,8 +97,8 @@ export function AffiliateDashboardSidebar() {
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-muted" />
             <div className="flex flex-col">
-              <span className="text-sm font-medium">Admin User</span>
-              <span className="text-xs text-muted-foreground">admin@example.com</span>
+              <span className="text-sm font-medium">{user?.name || 'User'}</span>
+              <span className="text-xs text-muted-foreground">{user?.email || 'loading...'}</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
