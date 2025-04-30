@@ -64,7 +64,7 @@ export default function LoginPage() {
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
-                Password
+                Password :  f3a8b53b-683f-4a7a-aeb0-35ebdb9e9dcd
               </label>
               <input
                 id="password"
